@@ -1,9 +1,12 @@
+-- [[ VARIABLES SECTION ]]
 local DungeonHubID = 73902483975735
 local TeleportService = game:GetService("TeleportService")
 local Players = game:GetService("Players")
 local CoreGui = game:GetService("CoreGui")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local plr = Players.LocalPlayer
 
+-- [[ UI CONSTRUCTION SECTION ]]
 local function CreateStatusUI()
     if CoreGui:FindFirstChild("AnnStatusUI") then
         CoreGui.AnnStatusUI:Destroy()
@@ -54,6 +57,7 @@ end
 
 local StatusUI = CreateStatusUI()
 
+-- [[ UI UPDATE FUNCTION ]]
 local function UpdateUI(found, required)
     if StatusUI then
         StatusUI.Enabled = true
@@ -61,18 +65,24 @@ local function UpdateUI(found, required)
     end
 end
 
+-- [[ CORE LOGIC SECTION ]]
 local function AreRequiredPlayersPresent()
     local targetUsers = getgenv().Configs["Account Join"].Users
     local validTargetNames = {}
     
+    -- Lọc bỏ các chuỗi rỗng để không bị tính sai nhó (｡◕‿‿◕｡)づ
     for _, name in pairs(targetUsers) do
-        if name ~= nil and name ~= "" then
+        if name and name ~= "" then
             table.insert(validTargetNames, string.lower(name))
         end
     end
     
     local requiredCount = #validTargetNames
-    if requiredCount == 0 then return false end 
+    
+    -- Nếu sau khi lọc mà hông còn tên nào thì đi luôn nhó
+    if requiredCount == 0 then 
+        return true 
+    end 
     
     local foundCount = 0
     local currentPlayers = Players:GetPlayers()
@@ -89,36 +99,37 @@ local function AreRequiredPlayersPresent()
     
     if foundCount < requiredCount then
         UpdateUI(foundCount, requiredCount)
+        return false
     else
         if StatusUI then StatusUI.Enabled = false end
+        return true
     end
-    
-    return foundCount >= requiredCount
 end
 
+-- [[ TEAM JOIN FUNCTION ]]
+local function JoinTeam()
+    local remote = ReplicatedStorage:FindFirstChild("Remotes") and ReplicatedStorage.Remotes:FindFirstChild("CommF_")
+    if remote then
+        remote:InvokeServer("SetTeam", "Pirates")
+    end
+end
+
+-- [[ MAIN EXECUTION ]]
 local function AutoJoinHub()
     if game.PlaceId ~= DungeonHubID then
-        if AreRequiredPlayersPresent() then
-            task.spawn(function()
-                local function joinPirates()
-                    local remote = game:GetService("ReplicatedStorage"):FindFirstChild("Remotes") and game:GetService("ReplicatedStorage").Remotes:FindFirstChild("CommF_")
-                    if remote then
-                        remote:InvokeServer("SetTeam", "Pirates")
-                    end
-                end
-
-                repeat 
-                    task.wait(0.5)
-                    joinPirates()
-                until plr.Team ~= nil
-            end)
-
-            task.wait(1)
-            TeleportService:Teleport(DungeonHubID, plr)
-        else
-            task.delay(2, function()
-                AutoJoinHub()
-            end)
+        while task.wait(2) do
+            if AreRequiredPlayersPresent() then
+                task.spawn(function()
+                    repeat 
+                        JoinTeam()
+                        task.wait(0.5)
+                    until (plr.Team ~= nil and tostring(plr.Team) ~= "Neutral") or game.PlaceId == DungeonHubID
+                end)
+                
+                task.wait(1.5)
+                TeleportService:Teleport(DungeonHubID, plr)
+                break
+            end
         end
     else
         if StatusUI then StatusUI:Destroy() end
