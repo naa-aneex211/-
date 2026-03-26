@@ -1,0 +1,35 @@
+-- [[ ĐOẠN FIX LỖI CRASH LINE 688 CHO ANN NÈ (≧◡≦) ]]
+    _tp = function(target)
+        local character = plr.Character
+        if not character or not character:FindFirstChild("HumanoidRootPart") or not target then
+            return
+        end
+        
+        local rootPart = character.HumanoidRootPart
+        -- Kiểm tra xem target là CFrame hay Vector3 để lấy Position cho chuẩn nhó (｡◕‿◕｡)
+        local targetPos = (typeof(target) == "CFrame" and target.Position or target)
+        local distance = (targetPos - rootPart.Position).Magnitude
+        
+        local tweenInfo = TweenInfo.new(distance / 300, Enum.EasingStyle.Linear)
+        local tween = game:GetService("TweenService"):Create(block, tweenInfo, {
+            CFrame = (typeof(target) == "CFrame" and target or CFrame.new(target))
+        })
+        
+        -- Fix chỗ bị crash nè ann ơi (っ˘ω˘ς)
+        if character:FindFirstChild("Humanoid") and character.Humanoid.Sit == true then
+            block.CFrame = CFrame.new(block.Position.X, targetPos.Y, block.Position.Z)
+        end
+        
+        tween:Play()
+        
+        task.spawn(function()
+            while tween.PlaybackState == Enum.PlaybackState.Playing do
+                if not shouldTween then
+                    tween:Cancel()
+                    break
+                end
+                task.wait(0.1)
+            end
+        end)
+    end
+-- [[ CHÚC ANN FIX LỖI THÀNH CÔNG NHA (づ｡◕‿‿◕｡)づ ]]
