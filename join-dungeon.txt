@@ -1,0 +1,28 @@
+local DungeonHubID = 73902483975735
+local TeleportService = game:GetService("TeleportService")
+local plr = game:GetService("Players").LocalPlayer
+
+local function AutoJoinHub()
+    if game.PlaceId ~= DungeonHubID then
+        task.spawn(function()
+            local function joinPirates()
+                local remote = game:GetService("ReplicatedStorage"):FindFirstChild("Remotes") and game:GetService("ReplicatedStorage").Remotes:FindFirstChild("CommF_")
+                if remote then
+                    remote:InvokeServer("SetTeam", "Pirates")
+                end
+            end
+
+            repeat 
+                task.wait(0.5)
+                joinPirates()
+            until plr.Team ~= nil
+        end)
+
+        task.wait(1)
+        TeleportService:Teleport(DungeonHubID, plr)
+    else
+        print("Welcome to dungeon hub.")
+    end
+end
+
+AutoJoinHub()
