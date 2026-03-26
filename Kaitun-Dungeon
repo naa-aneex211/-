@@ -1,0 +1,133 @@
+loadstring(game:HttpGet("https://raw.githubusercontent.com/aneeberry0-png/my-script/refs/heads/main/join-dungeon"))()
+loadstring(game:HttpGet("https://raw.githubusercontent.com/aneeberry0-png/my-script/refs/heads/main/no-gravity2"))()
+loadstring(game:HttpGet("https://raw.githubusercontent.com/HAPPY-script/AFK/refs/heads/main/AFK"))()
+_G.RaceClickAutov3 = true
+_G.RaceClickAutov4 = true
+_G.BusoAuto = true
+local noclipEnabled = true
+
+local Workspace = game:GetService("Workspace")
+local Players = game:GetService("Players")
+local replicated = game:GetService("ReplicatedStorage")
+local RunService = game:GetService("RunService")
+local VIM = game:GetService("VirtualInputManager")
+local plr = Players.LocalPlayer
+
+
+local function getCurrentToolTip()
+    if not getgenv().Config then return nil end
+    local myName = string.lower(plr.Name)
+    local myDisplayName = string.lower(plr.DisplayName)
+    
+    for _, data in pairs(getgenv().Config) do
+        if type(data) == "table" and data.Users then
+            for _, user in pairs(data.Users) do
+                local configUser = string.lower(tostring(user))
+                if configUser == myName or configUser == myDisplayName then 
+                    return data.ToolTip 
+                end
+            end
+        end
+    end
+    return nil
+end
+
+local function equipToolByRole()
+    local myToolTip = getCurrentToolTip()
+    if not myToolTip then return end
+    
+    local character = plr.Character
+    local backpack = plr:FindFirstChild("Backpack")
+    
+    if character and backpack then
+        local hum = character:FindFirstChild("Humanoid")
+        local currentlyEquipped = character:FindFirstChildOfClass("Tool")
+        
+        if currentlyEquipped and currentlyEquipped.ToolTip == myToolTip then return end
+        
+        for _, item in pairs(backpack:GetChildren()) do
+            if item:IsA("Tool") and item.ToolTip == myToolTip then
+                if hum then
+                    hum:EquipTool(item)
+                end
+                break
+            end
+        end
+    end
+end
+
+-- Hàm bấm phím kỹ năng
+local function Useskills(key)
+    VIM:SendKeyEvent(true, key, false, game)
+    task.wait(0.1)
+    VIM:SendKeyEvent(false, key, false, game)
+end
+
+
+task.spawn(function()
+    while true do
+        if Workspace.Map:FindFirstChild("Dungeon") then
+            equipToolByRole()
+            task.wait(0.5)
+        else
+            task.wait(2) 
+        end
+    end
+end)
+
+task.spawn(function()
+    while task.wait(0.5) do
+        if _G.RaceClickAutov3 then
+            pcall(function()
+                replicated.Remotes.CommE:FireServer("ActivateAbility")
+            end)
+            task.wait(30)
+        end
+    end
+end)
+
+task.spawn(function()
+    while task.wait(0.2) do
+        if _G.RaceClickAutov4 then
+            pcall(function()
+                local char = plr.Character
+                if char and char:FindFirstChild("RaceEnergy") then
+                    if char.RaceEnergy.Value >= 1 then 
+                        Useskills("Y")
+                    end
+                end
+            end)
+        end
+    end
+end)
+
+task.spawn(function()
+    while task.wait(1) do
+        if _G.BusoAuto then
+            pcall(function()
+                if plr.Character and not plr.Character:FindFirstChild("HasBuso") then
+                    replicated.Remotes.CommF_:InvokeServer("Buso")
+                end
+            end)
+        end
+    end
+end)
+
+RunService.Stepped:Connect(function()
+    if noclipEnabled then
+        local char = plr.Character
+        if char then
+            for _, part in pairs(char:GetDescendants()) do
+                if part:IsA("BasePart") and part.CanCollide then
+                    part.CanCollide = false
+                end
+            end
+        end
+    end
+end)
+
+if Workspace.Map:FindFirstChild("Dungeon") then
+loadstring(game:HttpGet("https://raw.githubusercontent.com/aneeberry0-png/my-script/refs/heads/main/main-dungeon"))()
+else
+    loadstring(game:HttpGet("https://raw.githubusercontent.com/aneeberry0-png/my-script/refs/heads/main/pad"))()
+end
