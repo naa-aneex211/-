@@ -1,0 +1,136 @@
+
+local plr = game.Players.LocalPlayer
+
+local function GetRole()
+    local myName = plr.Name:lower()
+    
+    if getgenv().Config and getgenv().Config["Account Join Raid"] then
+        for _, n in pairs(getgenv().Config["Account Join Raid"].Users) do
+            if n:lower() == myName then return "Account Join Raid" end
+        end
+    end
+    
+    if getgenv().Config and getgenv().Config["Account Join"] then
+        for _, n in pairs(getgenv().Config["Account Join"].Users) do
+            if n:lower() == myName then return "Account Join" end
+        end
+    end
+    
+    return nil
+end
+
+local myRole = GetRole()
+
+if myRole == "Account Join Raid" then
+    local m1_src = game:HttpGet("https://raw.githubusercontent.com/aneeberry0-png/my-script/refs/heads/main/m1-attack")
+    if m1_src then
+        task.spawn(function()
+            loadstring(m1_src)()
+        end)
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/aneeberry0-png/my-script/refs/heads/main/attack-dungeon-fruit"))()
+    end
+
+elseif myRole == "Account Join" then
+    local m1_src = game:HttpGet("https://raw.githubusercontent.com/aneeberry0-png/my-script/refs/heads/main/m1-attack")
+    if m1_src then
+        task.spawn(function()
+            loadstring(m1_src)()
+        end)
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/aneeberry0-png/my-script/refs/heads/main/Attack-dungeon-melee"))()
+    end
+
+else
+    warn("Account not in Config. Script Stopped.")
+end
+
+loadstring(game:HttpGet("https://raw.githubusercontent.com/aneeberry0-png/my-script/refs/heads/main/no-gravity"))()
+
+loadstring(game:HttpGet("https://raw.githubusercontent.com/HAPPY-script/AFK/refs/heads/main/AFK"))()
+
+-------------------------------------------------------------card--------------------------------
+local Players = game:GetService("Players")
+local vim = game:GetService("VirtualInputManager")
+local player = Players.LocalPlayer
+
+-- Chia nhỏ cấu tạo: Danh sách độ ưu tiên buff
+local presetMap = {
+    ["Sword"] = {"HYPER!", "Sword", "Fortress", "Lifesteal", "Armor", "Defense", "Race Meter", "Overflow", "Shadow", "All Cooldowns", "Melee", "Fruit", "Fruit M1 Speed"},
+    ["Melee"] = {"HYPER!", "Melee", "Fortress", "Lifesteal", "Armor", "Defense", "Race Meter", "Overflow", "Shadow", "All Cooldowns", "Sword", "Fruit", "Fruit M1 Speed"},
+    ["Blox Fruit"] = {"Fruit M1 Speed", "Fruit", "Fortress", "Lifesteal", "Armor", "Defense", "Race Meter", "Overflow", "Shadow", "All Cooldowns", "Melee", "Sword", "HYPER!"},
+}
+
+-- Chia nhỏ cấu tạo: Hàm lấy Priority riêng cho từng acc
+local function getMyPriorityList()
+    local myName = player.Name
+    local myRole = "Blox Fruit" -- Mặc định là Fruit nhó
+    
+    if getgenv().Config then
+        for _, group in pairs(getgenv().Config) do
+            if type(group) == "table" and group.Users then
+                for _, user in ipairs(group.Users) do
+                    if user == myName then
+                        myRole = group.ToolTip or "Blox Fruit"
+                        break
+                    end
+                end
+            end
+        end
+    end
+    return presetMap[myRole] or presetMap["Blox Fruit"]
+end
+
+-- Chia nhỏ cấu tạo: Hàm click ảo
+local function simulateClick(obj)
+    local x = obj.AbsolutePosition.X + (obj.AbsoluteSize.X / 2)
+    local y = obj.AbsolutePosition.Y + (obj.AbsoluteSize.Y / 2)
+    
+    if x > 10 and y > 10 then
+        vim:SendMouseButtonEvent(x, y, 0, true, game, 0)
+        task.wait(0.1)
+        vim:SendMouseButtonEvent(x, y, 0, false, game, 0)
+    end
+end
+
+-- Chia nhỏ cấu tạo: Logic tự động chọn Buff
+local function autoPickBuff()
+    local pGui = player:WaitForChild("PlayerGui")
+    -- Meyy~ đưa list ưu tiên vào đây để mỗi lần check nó đều nhận diện đúng acc
+    local currentPriority = getMyPriorityList()
+    
+    for _, targetName in ipairs(currentPriority) do
+        local targetLower = targetName:lower()
+        
+        for _, gui in ipairs(pGui:GetChildren()) do
+            if gui:IsA("ScreenGui") and gui.Enabled then
+                local frame1 = gui:FindFirstChild("1")
+                if frame1 and frame1.Visible then
+                    local foundMatch = false
+                    for _, child in pairs(frame1:GetDescendants()) do
+                        if child:IsA("TextLabel") and child.Visible then
+                            if child.Text:lower():find(targetLower) then
+                                foundMatch = true
+                                break
+                            end
+                        end
+                    end
+                    
+                    if foundMatch then
+                        simulateClick(frame1)
+                        return true
+                    end
+                end
+            end
+        end
+    end
+    return false
+end
+
+-- Chia nhỏ cấu tạo: Vòng lặp thực thi
+task.spawn(function()
+    while task.wait(0.5) do
+        local success = autoPickBuff()
+        if success then
+            task.wait(2.5) 
+        end
+    end
+end)
