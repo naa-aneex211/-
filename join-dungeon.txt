@@ -67,10 +67,10 @@ end
 
 -- [[ CORE LOGIC SECTION ]]
 local function AreRequiredPlayersPresent()
-    local targetUsers = getgenv().Configs["Account Join"].Users
+    -- Đã sửa thành Config (hông có s) rồi nhó ann (≧◡≦)
+    local targetUsers = getgenv().Config["Account Join"].Users
     local validTargetNames = {}
     
-    -- Lọc bỏ các chuỗi rỗng để không bị tính sai nhó (｡◕‿‿◕｡)づ
     for _, name in pairs(targetUsers) do
         if name and name ~= "" then
             table.insert(validTargetNames, string.lower(name))
@@ -78,8 +78,6 @@ local function AreRequiredPlayersPresent()
     end
     
     local requiredCount = #validTargetNames
-    
-    -- Nếu sau khi lọc mà hông còn tên nào thì đi luôn nhó
     if requiredCount == 0 then 
         return true 
     end 
