@@ -1,5 +1,5 @@
-loadstring(game:HttpGet("https://raw.githubusercontent.com/aneeberry0-png/my-script/refs/heads/main/join-dungeon"))()
-loadstring(game:HttpGet("https://raw.githubusercontent.com/aneeberry0-png/my-script/refs/heads/main/no-gravity2"))()
+loadstring(game:HttpGet("https://raw.githubusercontent.com/naa-aneex211/-/refs/heads/main/join-dungeon.txt"))()
+loadstring(game:HttpGet("https://raw.githubusercontent.com/naa-aneex211/-/refs/heads/main/no-gravity2.txt"))()
 loadstring(game:HttpGet("https://raw.githubusercontent.com/HAPPY-script/AFK/refs/heads/main/AFK"))()
 _G.RaceClickAutov3 = true
 _G.RaceClickAutov4 = true
@@ -127,7 +127,7 @@ RunService.Stepped:Connect(function()
 end)
 
 if Workspace.Map:FindFirstChild("Dungeon") then
-loadstring(game:HttpGet("https://raw.githubusercontent.com/aneeberry0-png/my-script/refs/heads/main/main-dungeon"))()
+loadstring(game:HttpGet("https://raw.githubusercontent.com/naa-aneex211/-/refs/heads/main/main-dungeon.txt"))()
 else
-    loadstring(game:HttpGet("https://raw.githubusercontent.com/aneeberry0-png/my-script/refs/heads/main/pad"))()
+    loadstring(game:HttpGet("https://raw.githubusercontent.com/naa-aneex211/-/refs/heads/main/pad.txt"))()
 end
