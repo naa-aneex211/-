@@ -1,26 +1,127 @@
 local DungeonHubID = 73902483975735
 local TeleportService = game:GetService("TeleportService")
-local plr = game:GetService("Players").LocalPlayer
+local Players = game:GetService("Players")
+local CoreGui = game:GetService("CoreGui")
+local plr = Players.LocalPlayer
+
+local function CreateStatusUI()
+    if CoreGui:FindFirstChild("AnnStatusUI") then
+        CoreGui.AnnStatusUI:Destroy()
+    end
+
+    local ScreenGui = Instance.new("ScreenGui")
+    local MainFrame = Instance.new("Frame")
+    local UICorner = Instance.new("UICorner")
+    local StatusLabel = Instance.new("TextLabel")
+    local DetailLabel = Instance.new("TextLabel")
+
+    ScreenGui.Name = "AnnStatusUI"
+    ScreenGui.Parent = CoreGui
+    ScreenGui.Enabled = false
+
+    MainFrame.Name = "MainFrame"
+    MainFrame.Parent = ScreenGui
+    MainFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+    MainFrame.BackgroundTransparency = 0.2
+    MainFrame.Position = UDim2.new(0.5, -125, 0.4, -40)
+    MainFrame.Size = UDim2.new(0, 250, 0, 80)
+
+    UICorner.CornerRadius = UDim.new(0, 10)
+    UICorner.Parent = MainFrame
+
+    StatusLabel.Name = "StatusLabel"
+    StatusLabel.Parent = MainFrame
+    StatusLabel.BackgroundTransparency = 1
+    StatusLabel.Position = UDim2.new(0, 0, 0.1, 0)
+    StatusLabel.Size = UDim2.new(1, 0, 0.4, 0)
+    StatusLabel.Font = Enum.Font.GothamBold
+    StatusLabel.Text = "WAITING FOR TEAM"
+    StatusLabel.TextColor3 = Color3.fromRGB(255, 80, 80)
+    StatusLabel.TextSize = 18
+
+    DetailLabel.Name = "DetailLabel"
+    DetailLabel.Parent = MainFrame
+    DetailLabel.BackgroundTransparency = 1
+    DetailLabel.Position = UDim2.new(0, 0, 0.5, 0)
+    DetailLabel.Size = UDim2.new(1, 0, 0.3, 0)
+    DetailLabel.Font = Enum.Font.Gotham
+    DetailLabel.Text = "0 / 0 Players Found"
+    DetailLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+    DetailLabel.TextSize = 14
+
+    return ScreenGui
+end
+
+local StatusUI = CreateStatusUI()
+
+local function UpdateUI(found, required)
+    if StatusUI then
+        StatusUI.Enabled = true
+        StatusUI.MainFrame.DetailLabel.Text = tostring(found) .. " / " .. tostring(required) .. " Players Found"
+    end
+end
+
+local function AreRequiredPlayersPresent()
+    local targetUsers = getgenv().Configs["Account Join"].Users
+    local validTargetNames = {}
+    
+    for _, name in pairs(targetUsers) do
+        if name ~= nil and name ~= "" then
+            table.insert(validTargetNames, string.lower(name))
+        end
+    end
+    
+    local requiredCount = #validTargetNames
+    if requiredCount == 0 then return false end 
+    
+    local foundCount = 0
+    local currentPlayers = Players:GetPlayers()
+    
+    for _, player in pairs(currentPlayers) do
+        local playerNameLower = string.lower(player.Name)
+        for _, targetName in pairs(validTargetNames) do
+            if playerNameLower == targetName then
+                foundCount = foundCount + 1
+                break
+            end
+        end
+    end
+    
+    if foundCount < requiredCount then
+        UpdateUI(foundCount, requiredCount)
+    else
+        if StatusUI then StatusUI.Enabled = false end
+    end
+    
+    return foundCount >= requiredCount
+end
 
 local function AutoJoinHub()
     if game.PlaceId ~= DungeonHubID then
-        task.spawn(function()
-            local function joinPirates()
-                local remote = game:GetService("ReplicatedStorage"):FindFirstChild("Remotes") and game:GetService("ReplicatedStorage").Remotes:FindFirstChild("CommF_")
-                if remote then
-                    remote:InvokeServer("SetTeam", "Pirates")
+        if AreRequiredPlayersPresent() then
+            task.spawn(function()
+                local function joinPirates()
+                    local remote = game:GetService("ReplicatedStorage"):FindFirstChild("Remotes") and game:GetService("ReplicatedStorage").Remotes:FindFirstChild("CommF_")
+                    if remote then
+                        remote:InvokeServer("SetTeam", "Pirates")
+                    end
                 end
-            end
 
-            repeat 
-                task.wait(0.5)
-                joinPirates()
-            until plr.Team ~= nil
-        end)
+                repeat 
+                    task.wait(0.5)
+                    joinPirates()
+                until plr.Team ~= nil
+            end)
 
-        task.wait(1)
-        TeleportService:Teleport(DungeonHubID, plr)
+            task.wait(1)
+            TeleportService:Teleport(DungeonHubID, plr)
+        else
+            task.delay(2, function()
+                AutoJoinHub()
+            end)
+        end
     else
+        if StatusUI then StatusUI:Destroy() end
         print("Welcome to dungeon hub.")
     end
 end
