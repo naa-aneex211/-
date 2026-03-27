@@ -1080,6 +1080,59 @@ end
         
         return Tab
     end
+
+
+-- [[ BUTTON ELEMENT ]] --
+function Tab:CreateButton(text, callback)
+    local row = Instance.new("Frame", page)
+    row.Size = UDim2.new(1, -4, 0, 42)
+    row.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    row.BackgroundTransparency = 0.8
+    Instance.new("UICorner", row).CornerRadius = UDim.new(0, 8)
+    
+    local rowStroke = Instance.new("UIStroke", row)
+    rowStroke.Color = Themes[CurrentTheme].RowStroke
+    rowStroke.Thickness = 1.2
+    rowStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+    table.insert(UI_Elements.RowStrokes, rowStroke)
+    
+    local rowGrad = Instance.new("UIGradient", rowStroke)
+    rowGrad.Color = Themes[CurrentTheme].RowStrokeGrad
+    table.insert(UI_Elements.RowStrokeGradients, rowGrad)
+    table.insert(UI_Elements.AnimatedGradients, rowGrad)
+    
+    local btn = Instance.new("TextButton", row)
+    btn.Size = UDim2.new(1, 0, 1, 0)
+    btn.BackgroundTransparency = 1
+    btn.Font = Enum.Font.GothamBold
+    btn.Text = text
+    btn.TextColor3 = Color3.new(1, 1, 1)
+    btn.TextSize = 15
+    
+    local btnStroke = Instance.new("UIStroke", btn)
+    btnStroke.Thickness = 1.2
+    btnStroke.Color = Themes[CurrentTheme].TitleStroke
+    btnStroke.Transparency = 0.2
+    table.insert(UI_Elements.AnimatedStrokes, {Obj = btnStroke, Type = "TitleStroke"})
+    
+    local btnGrad = Instance.new("UIGradient", btn)
+    btnGrad.Color = Themes[CurrentTheme].TextGrad
+    table.insert(UI_Elements.AnimatedGradients, btnGrad)
+    
+    -- Hiệu ứng Click đáng iu xỉu (｡◕‿◕｡)
+    btn.MouseButton1Down:Connect(function()
+        TweenService:Create(row, TweenInfo.new(0.1), {BackgroundTransparency = 0.6}):Play()
+    end)
+    
+    btn.MouseButton1Up:Connect(function()
+        TweenService:Create(row, TweenInfo.new(0.1), {BackgroundTransparency = 0.8}):Play()
+    end)
+    
+    btn.MouseButton1Click:Connect(function()
+        if callback then callback() end
+        Library:SendNotification("Button Clicked", text)
+    end)
+end
     
     -- [[ THEME APPLIER ]] --
     function Window:ApplyTheme(name)
