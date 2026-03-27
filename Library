@@ -759,8 +759,8 @@ function Library:CreateWindow(config)
             dropList.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
             dropList.BorderSizePixel = 0
             dropList.ScrollBarThickness = 2
-            Instance.new("UICorner", dropList).CornerRadius = UDim.new(0, 8)
             dropList.Visible = false
+            Instance.new("UICorner", dropList).CornerRadius = UDim.new(0, 8)
             
             local listLayout = Instance.new("UIListLayout", dropList)
             listLayout.Padding = UDim.new(0, 5)
@@ -900,6 +900,7 @@ function Tab:CreateMultiDropdown(text, defaultSelections, optionsList, callback)
     dropList.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
     dropList.BorderSizePixel = 0
     dropList.ScrollBarThickness = 2
+    dropList.Visible = false
     Instance.new("UICorner", dropList).CornerRadius = UDim.new(0, 8)
     
     local listLayout = Instance.new("UIListLayout", dropList)
