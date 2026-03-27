@@ -760,6 +760,7 @@ function Library:CreateWindow(config)
             dropList.BorderSizePixel = 0
             dropList.ScrollBarThickness = 2
             Instance.new("UICorner", dropList).CornerRadius = UDim.new(0, 8)
+            dropList.Visible = false
             
             local listLayout = Instance.new("UIListLayout", dropList)
             listLayout.Padding = UDim.new(0, 5)
