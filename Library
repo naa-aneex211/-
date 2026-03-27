@@ -793,12 +793,25 @@ function Library:CreateWindow(config)
                 end)
             end
             
-    dropBtn.MouseButton1Click:Connect(function()
-        isDropped = not isDropped
-        local targetHeight = isDropped and 160 or 46
-        TweenService:Create(container, TweenInfo.new(0.3, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {Size = UDim2.new(1, -4, 0, targetHeight)}):Play()
-        TweenService:Create(arrow, TweenInfo.new(0.3), {Rotation = isDropped and 180 or 0}):Play()
-    end)
+dropBtn.MouseButton1Click:Connect(function()
+    isDropped = not isDropped
+    local targetHeight = isDropped and 165 or 46
+    
+    -- [[ THÊM ĐOẠN NÀY ĐỂ GIẤU HẲN DANH SÁCH NHÓ ANN (｡◕‿◕｡) ]] --
+    if not isDropped then
+        dropList.Visible = false -- Tắt danh sách đi cho nó clean nè
+    end
+    
+    local tween = TweenService:Create(container, TweenInfo.new(0.3, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {Size = UDim2.new(1, -4, 0, targetHeight)})
+    tween:Play()
+    
+    -- Khi mở ra thì phải bật lại Visible nhó (≧◡≦)
+    if isDropped then
+        dropList.Visible = true
+    end
+    
+    TweenService:Create(arrow, TweenInfo.new(0.3), {Rotation = isDropped and 180 or 0}):Play()
+end)
 end
         
 
