@@ -1127,10 +1127,7 @@ end
                 Library:SendNotification("Switch Toggled", text .. ": " .. status)
             end)
         end
-        
-        return Tab
-    end
----------------------------------
+
 -- [[ SLIDER ELEMENT WITH TEXTBOX ]] --
 function Tab:CreateSlider(text, min, max, default, callback)
     local container = Instance.new("Frame", page)
@@ -1251,9 +1248,9 @@ function Tab:CreateSlider(text, min, max, default, callback)
     end)
 end
 
------------------------------------
+        return Tab
+    end
 
-    
     -- [[ THEME APPLIER ]] --
     function Window:ApplyTheme(name)
         local t = Themes[name]
