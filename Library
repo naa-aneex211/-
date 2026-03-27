@@ -277,7 +277,7 @@ function Library:CreateWindow(config)
     local isMini = false
     local isMax = false
     
-    -- Snow Effect --
+    -- [[ SNOW EFFECT ]] --
     local SnowContainer = Instance.new("Frame", m)
     SnowContainer.Name = "SnowContainer"
     SnowContainer.Size = UDim2.new(1, -20, 1, -20)
@@ -312,7 +312,7 @@ function Library:CreateWindow(config)
         end
     end)
     
-    -- Toggle Icon --
+    -- [[ TOGGLE ICON ]] --
     local ToggleIcon = Instance.new("ImageButton", g)
     ToggleIcon.Name = "ToggleIcon"
     ToggleIcon.Size = UDim2.new(0, 45, 0, 45)
@@ -336,7 +336,7 @@ function Library:CreateWindow(config)
         end
     end)
     
-    -- Main Stroke & Gradient --
+    -- [[ STROKES & GRADIENTS ]] --
     local u = Instance.new("UIStroke", m)
     u.Thickness = 4.5
     u.Color = Themes[CurrentTheme].MainStroke
@@ -344,7 +344,6 @@ function Library:CreateWindow(config)
     
     local e = Instance.new("UIGradient", u)
     
-    -- Wave Background --
     local waveBg = Instance.new("Frame", m)
     waveBg.Name = "WaveBackground"
     waveBg.Size = UDim2.new(1, 0, 1, 0)
@@ -356,7 +355,7 @@ function Library:CreateWindow(config)
     local waveGrad = Instance.new("UIGradient", waveBg)
     waveGrad.Color = Themes[CurrentTheme].Wave
     
-    -- Title Bar --
+    -- [[ TITLE BAR ]] --
     local titleBar = Instance.new("Frame", m)
     titleBar.Name = "TitleBar"
     titleBar.Size = UDim2.new(1, 0, 0, 55)
@@ -383,7 +382,7 @@ function Library:CreateWindow(config)
     hubTitleGrad.Color = Themes[CurrentTheme].TextGrad
     table.insert(UI_Elements.AnimatedGradients, hubTitleGrad)
     
-    -- Window Buttons --
+    -- [[ WINDOW CONTROLS ]] --
     local function CreateWinBtn(text, pos)
         local btn = Instance.new("TextButton", titleBar)
         btn.Size = UDim2.new(0, 30, 0, 30)
@@ -478,7 +477,7 @@ function Library:CreateWindow(config)
         end
     end)
     
-    -- Draggable --
+    -- [[ DRAGGABLE UI ]] --
     local dragging, dragInput, dragStart, startPos
     titleBar.InputBegan:Connect(function(input)
         if (input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch) then
@@ -501,7 +500,7 @@ function Library:CreateWindow(config)
         end
     end)
     
-    -- Dividers --
+    -- [[ DIVIDERS ]] --
     local TopDivider = Instance.new("Frame", m)
     TopDivider.Name = "TopDivider"
     TopDivider.Size = UDim2.new(1, -40, 0, 1)
@@ -537,7 +536,7 @@ function Library:CreateWindow(config)
     })
     table.insert(UI_Elements.DivGradients, leftDivGrad)
     
-    -- Sidebar --
+    -- [[ SIDEBAR ]] --
     local Sidebar = Instance.new("ScrollingFrame", m)
     Sidebar.Name = "Sidebar"
     Sidebar.Size = UDim2.new(0, 180, 1, -65)
@@ -621,6 +620,8 @@ function Library:CreateWindow(config)
         end)
         
         -- [[ ELEMENTS ]] --
+        
+        -- [[ TITLE ELEMENT ]] --
         function Tab:CreatePageTitle(text)
             local titleWrapper = Instance.new("Frame", page)
             titleWrapper.Size = UDim2.new(1, 0, 0, 45)
@@ -646,6 +647,7 @@ function Library:CreateWindow(config)
             table.insert(UI_Elements.AnimatedGradients, txtGrad)
         end
         
+        -- [[ SUBTITLE ELEMENT ]] --
         function Tab:CreatePageSubTitle(text)
             local titleWrapper = Instance.new("Frame", page)
             titleWrapper.Size = UDim2.new(1, 0, 0, 35)
@@ -671,6 +673,7 @@ function Library:CreateWindow(config)
             table.insert(UI_Elements.AnimatedGradients, txtGrad)
         end
         
+        -- [[ DROPDOWN ELEMENT (SINGLE) ]] --
         function Tab:CreateDropdown(text, default, optionsList, callback)
             local container = Instance.new("Frame", page)
             container.Size = UDim2.new(1, -4, 0, 46)
@@ -796,13 +799,9 @@ function Library:CreateWindow(config)
                 TweenService:Create(arrow, TweenInfo.new(0.3), {Rotation = isDropped and 180 or 0}):Play()
             end)
         end
-
+        
         -- [[ MULTI DROPDOWN ELEMENT ]] --
-        function Tab:CreateMultiDropdown(text, defaultOptions, optionsList, callback)
-            local isDropped = false
-            local selectedOptions = defaultOptions or {}
-            local optionsList = optionsList or {"Sample"}
-
+        function Tab:CreateMultiDropdown(text, defaultSelections, optionsList, callback)
             local container = Instance.new("Frame", page)
             container.Size = UDim2.new(1, -4, 0, 46)
             container.Position = UDim2.new(0, 2, 0, 0)
@@ -852,11 +851,10 @@ function Library:CreateWindow(config)
             dropBtn.AnchorPoint = Vector2.new(0, 0.5)
             dropBtn.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
             dropBtn.BackgroundTransparency = 0.8
-            dropBtn.Text = "None"
             dropBtn.Font = Enum.Font.GothamMedium
             dropBtn.TextColor3 = Color3.new(1, 1, 1)
-            dropBtn.TextSize = 10
-            dropBtn.TextWrapped = true
+            dropBtn.TextSize = 12.5
+            dropBtn.TextTruncate = Enum.TextTruncate.AtEnd
             Instance.new("UICorner", dropBtn).CornerRadius = UDim.new(0, 6)
             
             local dropBtnStroke = Instance.new("UIStroke", dropBtn)
@@ -882,7 +880,7 @@ function Library:CreateWindow(config)
             table.insert(UI_Elements.AnimatedGradients, arrowGrad)
             
             local dropList = Instance.new("ScrollingFrame", container)
-            dropList.Size = UDim2.new(1, 0, 0, 110)
+            dropList.Size = UDim2.new(1, 0, 1, -48)
             dropList.Position = UDim2.new(0, 0, 0, 48)
             dropList.BackgroundTransparency = 0.8
             dropList.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
@@ -898,48 +896,94 @@ function Library:CreateWindow(config)
             dropListStroke.Color = Themes[CurrentTheme].TitleStroke
             dropListStroke.Thickness = 1.2
             table.insert(UI_Elements.AnimatedStrokes, {Obj = dropListStroke, Type = "TitleStroke"})
-
-            local function updateDisplay()
-                if #selectedOptions == 0 then
-                    dropBtn.Text = "None"
+            
+            -- Multi Dropdown Logic
+            local isDropped = false
+            local selectedItems = {}
+            optionsList = optionsList or {"Sample Mode 1", "Sample Mode 2"}
+            defaultSelections = defaultSelections or {}
+            
+            -- Load Defaults
+            for _, v in pairs(defaultSelections) do
+                table.insert(selectedItems, v)
+            end
+            
+            local function UpdateButtonText()
+                if #selectedItems == 0 then
+                    dropBtn.Text = "None Selected"
+                elseif #selectedItems == 1 then
+                    dropBtn.Text = selectedItems[1]
+                elseif #selectedItems == 2 then
+                    dropBtn.Text = selectedItems[1] .. ", " .. selectedItems[2]
                 else
-                    dropBtn.Text = table.concat(selectedOptions, ", ")
+                    dropBtn.Text = "Selected (" .. tostring(#selectedItems) .. ")"
                 end
             end
-
+            UpdateButtonText()
+            
             for _, opt in pairs(optionsList) do
-                local optBtn = Instance.new("TextButton", dropList)
-                optBtn.Size = UDim2.new(1, -10, 0, 30)
-                optBtn.BackgroundTransparency = 1
-                optBtn.Text = opt
-                optBtn.Font = Enum.Font.GothamMedium
-                optBtn.TextSize = 12
-                optBtn.TextColor3 = table.find(selectedOptions, opt) and Color3.new(1, 1, 1) or Color3.fromRGB(150, 150, 150)
+                local dummyBtn = Instance.new("TextButton", dropList)
+                dummyBtn.Size = UDim2.new(1, -10, 0, 30)
+                dummyBtn.BackgroundTransparency = 1
+                dummyBtn.Text = opt
+                dummyBtn.Font = Enum.Font.GothamMedium
+                dummyBtn.TextColor3 = Color3.new(1, 1, 1)
+                dummyBtn.TextSize = 12
                 
-                optBtn.MouseButton1Click:Connect(function()
-                    local found = table.find(selectedOptions, opt)
-                    if found then
-                        table.remove(selectedOptions, found)
-                        optBtn.TextColor3 = Color3.fromRGB(150, 150, 150)
+                local optGrad = Instance.new("UIGradient", dummyBtn)
+                optGrad.Color = Themes[CurrentTheme].TextGrad
+                optGrad.Enabled = false
+                table.insert(UI_Elements.AnimatedGradients, optGrad)
+                
+                local isSelected = false
+                
+                local function UpdateVisuals()
+                    if isSelected then
+                        optGrad.Enabled = true
+                        dummyBtn.BackgroundTransparency = 0.85
+                        dummyBtn.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
                     else
-                        table.insert(selectedOptions, opt)
-                        optBtn.TextColor3 = Color3.new(1, 1, 1)
+                        optGrad.Enabled = false
+                        dummyBtn.TextColor3 = Color3.new(1, 1, 1)
+                        dummyBtn.BackgroundTransparency = 1
                     end
-                    updateDisplay()
-                    if callback then callback(selectedOptions) end
+                end
+                
+                -- Check initial state
+                for _, v in pairs(selectedItems) do
+                    if v == opt then isSelected = true break end
+                end
+                UpdateVisuals()
+                
+                dummyBtn.MouseButton1Click:Connect(function()
+                    if isSelected then
+                        -- Remove from list
+                        isSelected = false
+                        for i, v in ipairs(selectedItems) do
+                            if v == opt then table.remove(selectedItems, i) break end
+                        end
+                    else
+                        -- Add to list
+                        isSelected = true
+                        table.insert(selectedItems, opt)
+                    end
+                    
+                    UpdateVisuals()
+                    UpdateButtonText()
+                    
+                    if callback then callback(selectedItems) end
                 end)
             end
             
             dropBtn.MouseButton1Click:Connect(function()
                 isDropped = not isDropped
-                local targetHeight = isDropped and 165 or 46
+                local targetHeight = isDropped and 160 or 46
                 TweenService:Create(container, TweenInfo.new(0.3, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {Size = UDim2.new(1, -4, 0, targetHeight)}):Play()
                 TweenService:Create(arrow, TweenInfo.new(0.3), {Rotation = isDropped and 180 or 0}):Play()
             end)
-            
-            updateDisplay()
         end
         
+        -- [[ SWITCH ELEMENT ]] --
         function Tab:CreateSwitch(text, default, callback)
             local row = Instance.new("Frame", page)
             row.Size = UDim2.new(1, -4, 0, 42)
@@ -1097,13 +1141,23 @@ local MainPage = Window:CreateTab("Main", true)
 local SettingsPage = Window:CreateTab("Settings", false)
 Window:CreateTab("Stack Farm", false)
 Window:CreateTab("Farm Other", false)
-local SeaEventTab = Window:CreateTab("Sea Event", false)
+Window:CreateTab("Sea Event", false)
 Window:CreateTab("Mirage + Race", false)
 Window:CreateTab("Dragon Dojo", false)
 
 -- Main Page Content
 MainPage:CreatePageTitle("Main")
 MainPage:CreateDropdown("Select Method Farm", "Farm Katakuri", {"Farm Katakuri", "Farm Bones", "Farm Mastery"})
+
+-- MULTI DROPDOWN EXAMPLE
+MainPage:CreateMultiDropdown("Select Weapons", {"Sword"}, {"Melee", "Sword", "Gun", "Fruit"}, function(selectedItems)
+    -- This table 'selectedItems' returns all things selected!
+    print("User selected multiple things!")
+    for i, v in pairs(selectedItems) do
+        print(i, v)
+    end
+end)
+
 MainPage:CreateSwitch("Start Farm", false)
 MainPage:CreateSwitch("Accept Quests", false)
 MainPage:CreateSwitch("Ignore Boss", false)
@@ -1123,39 +1177,5 @@ end)
 SettingsPage:CreatePageSubTitle("Game Config")
 SettingsPage:CreateSwitch("Auto Rejoin", false)
 SettingsPage:CreateSwitch("White Screen", false)
-
--- Sea Event Sample Content
-SeaEventTab:CreatePageTitle("Setup Farm Idk")
-local ListSeaEventIDK = {"Shark", "Piranha", "Terror Shark", "Fish Crew Member", "Haunted Crew Member", "PirateGrandBrigade", "Sea Beast", "Fish Boat"}
-
-SeaEventTab:CreateMultiDropdown("Choose Sea Event Idk", {}, ListSeaEventIDK, function(Value)
-    _G.SelectIDK = Value
-end)
-
-SeaEventTab:CreateSwitch("Farm IDK", false, function(Value)
-    _G.FarmIDK = Value  
-end)
-
-task.spawn(function()
-    while task.wait(0.5) do
-        if _G.FarmIDK then
-            pcall(function()
-                local sel = _G.SelectIDK or {} 
-                _G.Shark = table.find(sel, "Shark") ~= nil
-                _G.Piranha = table.find(sel, "Piranha") ~= nil
-                _G.TerrorShark = table.find(sel, "Terror Shark") ~= nil
-                _G.MobCrew = table.find(sel, "Fish Crew Member") ~= nil
-                _G.HCM = table.find(sel, "Haunted Crew Member") ~= nil
-                _G.PGB = table.find(sel, "PirateGrandBrigade") ~= nil
-                _G.SeaBeast1 = table.find(sel, "Sea Beast") ~= nil
-                _G.FishBoat = table.find(sel, "Fish Boat") ~= nil
-            end)
-        end
-    end
-end)
-
-SeaEventTab:CreateSwitch("Auto Attack Leviathan", false, function(Value)
-    _G.Leviathan1 = Value
-end)
 
 return Library
