@@ -941,7 +941,7 @@ function Tab:CreateMultiDropdown(text, defaultSelections, optionsList, callback)
         local function UpdateVisuals()
             if isSelected then
                 optGrad.Enabled = true
-                dummyBtn.BackgroundTransparency = 0.85
+                dummyBtn.BackgroundTransparency = 1
                 dummyBtn.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
             else
                 optGrad.Enabled = false
