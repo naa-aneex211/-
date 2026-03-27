@@ -1127,12 +1127,10 @@ end
                 Library:SendNotification("Switch Toggled", text .. ": " .. status)
             end)
         end
-        
-        return Tab
+
+ return Tab
     end
 
-
-    
     -- [[ THEME APPLIER ]] --
     function Window:ApplyTheme(name)
         local t = Themes[name]
