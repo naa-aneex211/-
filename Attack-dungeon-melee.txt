@@ -381,7 +381,7 @@ task.spawn(function()
                             local targetPos
                             if activeBoss then
                                 if rNum == 15 then
-                                    if _G.IsBossPhase2 and hpPercent <= 93 then
+                                    if _G.IsBossPhase2 and hpPercent <= 75 then
                                         _G.KillH = true; targetPos = bHRP.Position + Vector3.new(0, 700, 0)
                                         updateUI("Boss Phase 2 - Low HP", "Safe Mode 700 Studs")
                                     else
