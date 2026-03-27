@@ -800,188 +800,184 @@ function Library:CreateWindow(config)
             end)
         end
         
-        -- [[ MULTI DROPDOWN ELEMENT ]] --
-        function Tab:CreateMultiDropdown(text, defaultSelections, optionsList, callback)
-            local container = Instance.new("Frame", page)
-            container.Size = UDim2.new(1, -4, 0, 46)
-            container.Position = UDim2.new(0, 2, 0, 0)
-            container.BackgroundTransparency = 1
-            container.ClipsDescendants = true
-            
-            local row = Instance.new("Frame", container)
-            row.Size = UDim2.new(1, 0, 0, 42)
-            row.Position = UDim2.new(0, 0, 0, 2)
-            row.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-            row.BackgroundTransparency = 0.8
-            Instance.new("UICorner", row).CornerRadius = UDim.new(0, 8)
-            
-            local rowStroke = Instance.new("UIStroke", row)
-            rowStroke.Color = Themes[CurrentTheme].RowStroke
-            rowStroke.Thickness = 1.2
-            table.insert(UI_Elements.RowStrokes, rowStroke)
-            
-            local rowGrad = Instance.new("UIGradient", rowStroke)
-            rowGrad.Color = Themes[CurrentTheme].RowStrokeGrad
-            table.insert(UI_Elements.RowStrokeGradients, rowGrad)
-            table.insert(UI_Elements.AnimatedGradients, rowGrad)
-            
-            local label = Instance.new("TextLabel", row)
-            label.Size = UDim2.new(0.5, -10, 1, 0)
-            label.Position = UDim2.new(0, 15, 0, 0)
-            label.BackgroundTransparency = 1
-            label.Font = Enum.Font.GothamMedium
-            label.Text = text
-            label.TextColor3 = Color3.new(1, 1, 1)
-            label.TextSize = 14.5
-            label.TextXAlignment = Enum.TextXAlignment.Left
-            
-            local labelStroke = Instance.new("UIStroke", label)
-            labelStroke.Thickness = 0.5
-            labelStroke.Color = Themes[CurrentTheme].TitleStroke
-            labelStroke.Transparency = 0.2
-            table.insert(UI_Elements.AnimatedStrokes, {Obj = labelStroke, Type = "TitleStroke"})
-            
-            local labelGrad = Instance.new("UIGradient", label)
-            labelGrad.Color = Themes[CurrentTheme].TextGrad
-            table.insert(UI_Elements.AnimatedGradients, labelGrad)
-            
-            local dropBtn = Instance.new("TextButton", row)
-            dropBtn.Size = UDim2.new(0, 130, 0, 30)
-            dropBtn.Position = UDim2.new(1, -145, 0.5, 0)
-            dropBtn.AnchorPoint = Vector2.new(0, 0.5)
-            dropBtn.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-            dropBtn.BackgroundTransparency = 0.8
-            dropBtn.Font = Enum.Font.GothamMedium
-            dropBtn.TextColor3 = Color3.new(1, 1, 1)
-            dropBtn.TextSize = 12.5
-            dropBtn.TextTruncate = Enum.TextTruncate.AtEnd
-            Instance.new("UICorner", dropBtn).CornerRadius = UDim.new(0, 6)
-            
-            local dropBtnStroke = Instance.new("UIStroke", dropBtn)
-            dropBtnStroke.Thickness = 1
-            dropBtnStroke.Color = Themes[CurrentTheme].TitleStroke
-            dropBtnStroke.Transparency = 0.2
-            table.insert(UI_Elements.AnimatedStrokes, {Obj = dropBtnStroke, Type = "TitleStroke"})
-            
-            local dropBtnGrad = Instance.new("UIGradient", dropBtn)
-            dropBtnGrad.Color = Themes[CurrentTheme].TextGrad
-            table.insert(UI_Elements.AnimatedGradients, dropBtnGrad)
-            
-            local arrow = Instance.new("TextLabel", dropBtn)
-            arrow.Size = UDim2.new(0, 20, 1, 0)
-            arrow.Position = UDim2.new(1, -25, 0, 0)
-            arrow.BackgroundTransparency = 1
-            arrow.Text = "▼"
-            arrow.TextColor3 = Color3.new(1, 1, 1)
-            arrow.TextSize = 10
-            
-            local arrowGrad = Instance.new("UIGradient", arrow)
-            arrowGrad.Color = Themes[CurrentTheme].TextGrad
-            table.insert(UI_Elements.AnimatedGradients, arrowGrad)
-            
-            local dropList = Instance.new("ScrollingFrame", container)
-            dropList.Size = UDim2.new(1, 0, 1, -48)
-            dropList.Position = UDim2.new(0, 0, 0, 48)
-            dropList.BackgroundTransparency = 0.8
-            dropList.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-            dropList.BorderSizePixel = 0
-            dropList.ScrollBarThickness = 2
-            Instance.new("UICorner", dropList).CornerRadius = UDim.new(0, 8)
-            
-            local listLayout = Instance.new("UIListLayout", dropList)
-            listLayout.Padding = UDim.new(0, 5)
-            listLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
-            
-            local dropListStroke = Instance.new("UIStroke", dropList)
-            dropListStroke.Color = Themes[CurrentTheme].TitleStroke
-            dropListStroke.Thickness = 1.2
-            table.insert(UI_Elements.AnimatedStrokes, {Obj = dropListStroke, Type = "TitleStroke"})
-            
-            -- Multi Dropdown Logic
-            local isDropped = false
-            local selectedItems = {}
-            optionsList = optionsList or {"Sample Mode 1", "Sample Mode 2"}
-            defaultSelections = defaultSelections or {}
-            
-            -- Load Defaults
-            for _, v in pairs(defaultSelections) do
-                table.insert(selectedItems, v)
-            end
-            
-            local function UpdateButtonText()
-                if #selectedItems == 0 then
-                    dropBtn.Text = "None Selected"
-                elseif #selectedItems == 1 then
-                    dropBtn.Text = selectedItems[1]
-                elseif #selectedItems == 2 then
-                    dropBtn.Text = selectedItems[1] .. ", " .. selectedItems[2]
-                else
-                    dropBtn.Text = "Selected (" .. tostring(#selectedItems) .. ")"
-                end
-            end
-            UpdateButtonText()
-            
-            for _, opt in pairs(optionsList) do
-                local dummyBtn = Instance.new("TextButton", dropList)
-                dummyBtn.Size = UDim2.new(1, -10, 0, 30)
-                dummyBtn.BackgroundTransparency = 1
-                dummyBtn.Text = opt
-                dummyBtn.Font = Enum.Font.GothamMedium
-                dummyBtn.TextColor3 = Color3.new(1, 1, 1)
-                dummyBtn.TextSize = 12
-                
-                local optGrad = Instance.new("UIGradient", dummyBtn)
-                optGrad.Color = Themes[CurrentTheme].TextGrad
-                optGrad.Enabled = false
-                table.insert(UI_Elements.AnimatedGradients, optGrad)
-                
-                local isSelected = false
-                
-                local function UpdateVisuals()
-                    if isSelected then
-                        optGrad.Enabled = true
-                        dummyBtn.BackgroundTransparency = 0.85
-                        dummyBtn.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-                    else
-                        optGrad.Enabled = false
-                        dummyBtn.TextColor3 = Color3.new(1, 1, 1)
-                        dummyBtn.BackgroundTransparency = 1
-                    end
-                end
-                
-                -- Check initial state
-                for _, v in pairs(selectedItems) do
-                    if v == opt then isSelected = true break end
-                end
-                UpdateVisuals()
-                
-                dummyBtn.MouseButton1Click:Connect(function()
-                    if isSelected then
-                        -- Remove from list
-                        isSelected = false
-                        for i, v in ipairs(selectedItems) do
-                            if v == opt then table.remove(selectedItems, i) break end
-                        end
-                    else
-                        -- Add to list
-                        isSelected = true
-                        table.insert(selectedItems, opt)
-                    end
-                    
-                    UpdateVisuals()
-                    UpdateButtonText()
-                    
-                    if callback then callback(selectedItems) end
-                end)
-            end
-            
-            dropBtn.MouseButton1Click:Connect(function()
-                isDropped = not isDropped
-                local targetHeight = isDropped and 160 or 46
-                TweenService:Create(container, TweenInfo.new(0.3, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {Size = UDim2.new(1, -4, 0, targetHeight)}):Play()
-                TweenService:Create(arrow, TweenInfo.new(0.3), {Rotation = isDropped and 180 or 0}):Play()
-            end)
+        -- ==========================================================
+-- [CHIA ĐỂ TRỊ: HIDE KHUNG ĐEN TRONG MULTI DROPDOWN]
+-- ==========================================================
+function Tab:CreateMultiDropdown(text, defaultSelections, optionsList, callback)
+    local container = Instance.new("Frame", page)
+    container.Size = UDim2.new(1, -4, 0, 46)
+    container.Position = UDim2.new(0, 2, 0, 0)
+    container.BackgroundTransparency = 1
+    container.ClipsDescendants = true
+    
+    local row = Instance.new("Frame", container)
+    row.Size = UDim2.new(1, 0, 0, 42)
+    row.Position = UDim2.new(0, 0, 0, 2)
+    row.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    row.BackgroundTransparency = 0.8
+    Instance.new("UICorner", row).CornerRadius = UDim.new(0, 8)
+    
+    local rowStroke = Instance.new("UIStroke", row)
+    rowStroke.Color = Themes[CurrentTheme].RowStroke
+    rowStroke.Thickness = 1.2
+    table.insert(UI_Elements.RowStrokes, rowStroke)
+    
+    local rowGrad = Instance.new("UIGradient", rowStroke)
+    rowGrad.Color = Themes[CurrentTheme].RowStrokeGrad
+    table.insert(UI_Elements.RowStrokeGradients, rowGrad)
+    table.insert(UI_Elements.AnimatedGradients, rowGrad)
+    
+    local label = Instance.new("TextLabel", row)
+    label.Size = UDim2.new(0.5, -10, 1, 0)
+    label.Position = UDim2.new(0, 15, 0, 0)
+    label.BackgroundTransparency = 1
+    label.Font = Enum.Font.GothamMedium
+    label.Text = text
+    label.TextColor3 = Color3.new(1, 1, 1)
+    label.TextSize = 14.5
+    label.TextXAlignment = Enum.TextXAlignment.Left
+    
+    local labelStroke = Instance.new("UIStroke", label)
+    labelStroke.Thickness = 0.5
+    labelStroke.Color = Themes[CurrentTheme].TitleStroke
+    labelStroke.Transparency = 0.2
+    table.insert(UI_Elements.AnimatedStrokes, {Obj = labelStroke, Type = "TitleStroke"})
+    
+    local labelGrad = Instance.new("UIGradient", label)
+    labelGrad.Color = Themes[CurrentTheme].TextGrad
+    table.insert(UI_Elements.AnimatedGradients, labelGrad)
+    
+    local dropBtn = Instance.new("TextButton", row)
+    dropBtn.Size = UDim2.new(0, 130, 0, 30)
+    dropBtn.Position = UDim2.new(1, -145, 0.5, 0)
+    dropBtn.AnchorPoint = Vector2.new(0, 0.5)
+    dropBtn.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    dropBtn.BackgroundTransparency = 0.8
+    dropBtn.Font = Enum.Font.GothamMedium
+    dropBtn.TextColor3 = Color3.new(1, 1, 1)
+    dropBtn.TextSize = 12.5
+    dropBtn.TextTruncate = Enum.TextTruncate.AtEnd
+    Instance.new("UICorner", dropBtn).CornerRadius = UDim.new(0, 6)
+    
+    local dropBtnStroke = Instance.new("UIStroke", dropBtn)
+    dropBtnStroke.Thickness = 1
+    dropBtnStroke.Color = Themes[CurrentTheme].TitleStroke
+    dropBtnStroke.Transparency = 0.2
+    table.insert(UI_Elements.AnimatedStrokes, {Obj = dropBtnStroke, Type = "TitleStroke"})
+    
+    local dropBtnGrad = Instance.new("UIGradient", dropBtn)
+    dropBtnGrad.Color = Themes[CurrentTheme].TextGrad
+    table.insert(UI_Elements.AnimatedGradients, dropBtnGrad)
+    
+    local arrow = Instance.new("TextLabel", dropBtn)
+    arrow.Size = UDim2.new(0, 20, 1, 0)
+    arrow.Position = UDim2.new(1, -25, 0, 0)
+    arrow.BackgroundTransparency = 1
+    arrow.Text = "▼"
+    arrow.TextColor3 = Color3.new(1, 1, 1)
+    arrow.TextSize = 10
+    
+    local arrowGrad = Instance.new("UIGradient", arrow)
+    arrowGrad.Color = Themes[CurrentTheme].TextGrad
+    table.insert(UI_Elements.AnimatedGradients, arrowGrad)
+    
+    local dropList = Instance.new("ScrollingFrame", container)
+    dropList.Size = UDim2.new(1, 0, 1, -48)
+    dropList.Position = UDim2.new(0, 0, 0, 48)
+    dropList.BackgroundTransparency = 0.8
+    dropList.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    dropList.BorderSizePixel = 0
+    dropList.ScrollBarThickness = 2
+    Instance.new("UICorner", dropList).CornerRadius = UDim.new(0, 8)
+    
+    local listLayout = Instance.new("UIListLayout", dropList)
+    listLayout.Padding = UDim.new(0, 5)
+    listLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+    
+    local dropListStroke = Instance.new("UIStroke", dropList)
+    dropListStroke.Color = Themes[CurrentTheme].TitleStroke
+    dropListStroke.Thickness = 1.2
+    table.insert(UI_Elements.AnimatedStrokes, {Obj = dropListStroke, Type = "TitleStroke"})
+    
+    local isDropped = false
+    local selectedItems = {}
+    optionsList = optionsList or {"Sample Mode 1", "Sample Mode 2"}
+    defaultSelections = defaultSelections or {}
+    
+    for _, v in pairs(defaultSelections) do
+        table.insert(selectedItems, v)
+    end
+    
+    local function UpdateButtonText()
+        if #selectedItems == 0 then
+            dropBtn.Text = "None Selected"
+        elseif #selectedItems == 1 then
+            dropBtn.Text = selectedItems[1]
+        elseif #selectedItems == 2 then
+            dropBtn.Text = selectedItems[1] .. ", " .. selectedItems[2]
+        else
+            dropBtn.Text = "Selected (" .. tostring(#selectedItems) .. ")"
         end
+    end
+    UpdateButtonText()
+    
+    for _, opt in pairs(optionsList) do
+        local dummyBtn = Instance.new("TextButton", dropList)
+        dummyBtn.Size = UDim2.new(1, -10, 0, 30)
+        dummyBtn.BackgroundTransparency = 1
+        dummyBtn.Text = opt
+        dummyBtn.Font = Enum.Font.GothamMedium
+        dummyBtn.TextColor3 = Color3.new(1, 1, 1)
+        dummyBtn.TextSize = 12
+        
+        -- meyy~ đã xóa phần UIStroke của dummyBtn để hide khung đen rùi nè (〃´∀｀)
+        
+        local optGrad = Instance.new("UIGradient", dummyBtn)
+        optGrad.Color = Themes[CurrentTheme].TextGrad
+        optGrad.Enabled = false
+        table.insert(UI_Elements.AnimatedGradients, optGrad)
+        
+        local isSelected = false
+        local function UpdateVisuals()
+            if isSelected then
+                optGrad.Enabled = true
+                dummyBtn.BackgroundTransparency = 0.85
+                dummyBtn.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+            else
+                optGrad.Enabled = false
+                dummyBtn.TextColor3 = Color3.new(1, 1, 1)
+                dummyBtn.BackgroundTransparency = 1
+            end
+        end
+        
+        for _, v in pairs(selectedItems) do
+            if v == opt then isSelected = true break end
+        end
+        UpdateVisuals()
+        
+        dummyBtn.MouseButton1Click:Connect(function()
+            if isSelected then
+                isSelected = false
+                for i, v in ipairs(selectedItems) do
+                    if v == opt then table.remove(selectedItems, i) break end
+                end
+            else
+                isSelected = true
+                table.insert(selectedItems, opt)
+            end
+            UpdateVisuals()
+            UpdateButtonText()
+            if callback then callback(selectedItems) end
+        end)
+    end
+    
+    dropBtn.MouseButton1Click:Connect(function()
+        isDropped = not isDropped
+        local targetHeight = isDropped and 160 or 46
+        TweenService:Create(container, TweenInfo.new(0.3, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {Size = UDim2.new(1, -4, 0, targetHeight)}):Play()
+        TweenService:Create(arrow, TweenInfo.new(0.3), {Rotation = isDropped and 180 or 0}):Play()
+    end)
+end
         
         -- [[ SWITCH ELEMENT ]] --
         function Tab:CreateSwitch(text, default, callback)
