@@ -808,7 +808,7 @@ function Tab:CreateMultiDropdown(text, defaultSelections, optionsList, callback)
     container.Size = UDim2.new(1, -4, 0, 46)
     container.Position = UDim2.new(0, 2, 0, 0)
     container.BackgroundTransparency = 1
-    container.ClipsDescendants = true
+    container.ClipsDescendants = false
     
     local row = Instance.new("Frame", container)
     row.Size = UDim2.new(1, 0, 0, 42)
@@ -897,6 +897,7 @@ function Tab:CreateMultiDropdown(text, defaultSelections, optionsList, callback)
     local dropListStroke = Instance.new("UIStroke", dropList)
     dropListStroke.Color = Themes[CurrentTheme].TitleStroke
     dropListStroke.Thickness = 1.2
+    dropListStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border -- fix 
     table.insert(UI_Elements.AnimatedStrokes, {Obj = dropListStroke, Type = "TitleStroke"})
     
     local isDropped = false
