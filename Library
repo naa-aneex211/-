@@ -792,29 +792,13 @@ function Library:CreateWindow(config)
                 end)
             end
             
--- ==========================================================
--- [CHIA ĐỂ TRỊ: CHỈ DÙNG CLIPS DESCENDANTS ĐỂ FIX LỖI]
--- ==========================================================
-            dropBtn.MouseButton1Click:Connect(function()
-                isDropped = not isDropped
-                -- meyy~ để 165 để hông bị mất cái viền (Stroke) ở dưới nhó (｡◕‿◕｡)
-                local targetHeight = isDropped and 165 or 46
-                
-                -- [[ CHỈ DÙNG CLIPS DESCENDANTS NHƯ ANN BẢO NÈ ]] --
-                if isDropped then
-                    -- Khi mở: Tắt Clips để hiện cái viền lòi ra ngoài khung cho đẹp (≧◡≦)
-                    container.ClipsDescendants = false
-                else
-                    -- Khi đóng: Bật Clips để "cắt" sạch danh sách hông cho thò ra ngoài
-                    container.ClipsDescendants = true
-                end
-                
-                -- Chạy hiệu ứng mượt mà cho ann nhó
-                TweenService:Create(container, TweenInfo.new(0.3, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {Size = UDim2.new(1, -4, 0, targetHeight)}):Play()
-                
-                -- Xoay cái mũi tên cho nó điệu nè (っ˘ω˘ς)
-                TweenService:Create(arrow, TweenInfo.new(0.3), {Rotation = isDropped and 180 or 0}):Play()
-            end)
+    dropBtn.MouseButton1Click:Connect(function()
+        isDropped = not isDropped
+        local targetHeight = isDropped and 160 or 46
+        TweenService:Create(container, TweenInfo.new(0.3, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {Size = UDim2.new(1, -4, 0, targetHeight)}):Play()
+        TweenService:Create(arrow, TweenInfo.new(0.3), {Rotation = isDropped and 180 or 0}):Play()
+    end)
+end
         
 
 function Tab:CreateMultiDropdown(text, defaultSelections, optionsList, callback)
