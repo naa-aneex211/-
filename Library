@@ -1130,7 +1130,128 @@ end
         
         return Tab
     end
+---------------------------------
+-- [[ SLIDER ELEMENT WITH TEXTBOX ]] --
+function Tab:CreateSlider(text, min, max, default, callback)
+    local container = Instance.new("Frame", page)
+    container.Size = UDim2.new(1, -4, 0, 65) -- Cao hơn xíu để chứa cả thanh trượt nhó
+    container.BackgroundTransparency = 1
+    
+    local row = Instance.new("Frame", container)
+    row.Size = UDim2.new(1, 0, 0, 60)
+    row.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    row.BackgroundTransparency = 0.8
+    Instance.new("UICorner", row).CornerRadius = UDim.new(0, 10)
+    
+    -- Viền Gradient cho sang chảnh nè (｡◕‿◕｡)
+    local rowStroke = Instance.new("UIStroke", row)
+    rowStroke.Color = Themes[CurrentTheme].RowStroke
+    rowStroke.Thickness = 1.2
+    table.insert(UI_Elements.RowStrokes, rowStroke)
+    
+    local rowGrad = Instance.new("UIGradient", rowStroke)
+    rowGrad.Color = Themes[CurrentTheme].RowStrokeGrad
+    table.insert(UI_Elements.RowStrokeGradients, rowGrad)
+    table.insert(UI_Elements.AnimatedGradients, rowGrad)
+    
+    -- Tiêu đề của Slider
+    local label = Instance.new("TextLabel", row)
+    label.Size = UDim2.new(0.6, 0, 0, 30)
+    label.Position = UDim2.new(0, 15, 0, 5)
+    label.BackgroundTransparency = 1
+    label.Font = Enum.Font.GothamMedium
+    label.Text = text
+    label.TextColor3 = Color3.new(1, 1, 1)
+    label.TextSize = 14
+    label.TextXAlignment = Enum.TextXAlignment.Left
+    
+    local labelGrad = Instance.new("UIGradient", label)
+    labelGrad.Color = Themes[CurrentTheme].TextGrad
+    table.insert(UI_Elements.AnimatedGradients, labelGrad)
 
+    -- Ô TextBox để nhập số liệu nhó (≧◡≦)
+    local inputField = Instance.new("TextBox", row)
+    inputField.Size = UDim2.new(0, 50, 0, 22)
+    inputField.Position = UDim2.new(1, -65, 0, 10)
+    inputField.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    inputField.BackgroundTransparency = 0.9
+    inputField.Font = Enum.Font.GothamBold
+    inputField.Text = tostring(default)
+    inputField.TextColor3 = Color3.new(1, 1, 1)
+    inputField.TextSize = 12
+    Instance.new("UICorner", inputField).CornerRadius = UDim.new(0, 5)
+    
+    local inputStroke = Instance.new("UIStroke", inputField)
+    inputStroke.Thickness = 1
+    inputStroke.Color = Themes[CurrentTheme].TitleStroke
+    inputStroke.Transparency = 0.5
+
+    -- Thanh trượt (Slider BG)
+    local sliderBg = Instance.new("Frame", row)
+    sliderBg.Size = UDim2.new(1, -30, 0, 6)
+    sliderBg.Position = UDim2.new(0, 15, 0, 45)
+    sliderBg.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    sliderBg.BackgroundTransparency = 0.9
+    Instance.new("UICorner", sliderBg).CornerRadius = UDim.new(1, 0)
+    
+    -- Thanh trượt chính (Fill)
+    local sliderFill = Instance.new("Frame", sliderBg)
+    sliderFill.Size = UDim2.new((default - min) / (max - min), 0, 1, 0)
+    sliderFill.BackgroundColor3 = Color3.new(1, 1, 1)
+    sliderFill.BorderSizePixel = 0
+    Instance.new("UICorner", sliderFill).CornerRadius = UDim.new(1, 0)
+    
+    local fillGrad = Instance.new("UIGradient", sliderFill)
+    fillGrad.Color = Themes[CurrentTheme].TextGrad
+    table.insert(UI_Elements.AnimatedGradients, fillGrad)
+
+    -- Nút tròn kéo kéo (Main Circle)
+    local circle = Instance.new("Frame", sliderFill)
+    circle.Size = UDim2.new(0, 14, 0, 14)
+    circle.Position = UDim2.new(1, 0, 0.5, 0)
+    circle.AnchorPoint = Vector2.new(0.5, 0.5)
+    circle.BackgroundColor3 = Color3.new(1, 1, 1)
+    Instance.new("UICorner", circle).CornerRadius = UDim.new(1, 0)
+    
+    local circleStroke = Instance.new("UIStroke", circle)
+    circleStroke.Thickness = 2
+    circleStroke.Color = Themes[CurrentTheme].TitleStroke
+    table.insert(UI_Elements.AnimatedStrokes, {Obj = circleStroke, Type = "TitleStroke"})
+
+    -- Logic điều khiển (Hơi bị mượt luôn mò)
+    local function move(input)
+        local pos = math.clamp((input.Position.X - sliderBg.AbsolutePosition.X) / sliderBg.AbsoluteSize.X, 0, 1)
+        local value = math.floor(min + (max - min) * pos)
+        
+        sliderFill.Size = UDim2.new(pos, 0, 1, 0)
+        inputField.Text = tostring(value)
+        if callback then callback(value) end
+    end
+
+    local dragging = false
+    circle.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 then dragging = true end
+    end)
+    UserInputService.InputEnded:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 then dragging = false end
+    end)
+    UserInputService.InputChanged:Connect(function(input)
+        if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then move(input) end
+    end)
+
+    -- Logic khi nhập số trực tiếp vào TextBox nhó (≧◡≦)
+    inputField.FocusLost:Connect(function()
+        local val = tonumber(inputField.Text)
+        if not val then val = default end
+        val = math.clamp(val, min, max)
+        
+        inputField.Text = tostring(val)
+        TweenService:Create(sliderFill, TweenInfo.new(0.2), {Size = UDim2.new((val - min) / (max - min), 0, 1, 0)}):Play()
+        if callback then callback(val) end
+    end)
+end
+
+-----------------------------------
 
     
     -- [[ THEME APPLIER ]] --
