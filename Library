@@ -794,27 +794,23 @@ function Library:CreateWindow(config)
             
 dropBtn.MouseButton1Click:Connect(function()
                 isDropped = not isDropped
-                -- meyy~ tăng nhẹ chiều cao lên 165 để hông bị mất cái viền dưới nhó (｡◕‿◕｡)
                 local targetHeight = isDropped and 165 or 46
                 
-                -- Ẩn ngay lập tức khi đóng để hông bị thò danh sách ra ngoài khung 
                 if not isDropped then
+                    -- Khi đóng: Bật Clips lên lại để giấu hết nội dung thừa nhó (｡◕‿◕｡)
+                    container.ClipsDescendants = true
                     dropList.Visible = false
-                end
-                
-                -- Chạy hiệu ứng thu phóng khung container 
-                local tween = TweenService:Create(container, TweenInfo.new(0.3, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {Size = UDim2.new(1, -4, 0, targetHeight)})
-                tween:Play()
-                
-                -- Chỉ hiện lại danh sách khi đã mở khung ra 
-                if isDropped then
+                else
+                    -- Khi mở: Tắt Clips để hiện cái viền Stroke ra ngoài khung nè (≧◡≦)
+                    container.ClipsDescendants = false
                     dropList.Visible = true
                 end
                 
-                -- Xoay mũi tên chỉ hướng cho chuyên nghiệp nè ann (≧◡≦) 
+                local tween = TweenService:Create(container, TweenInfo.new(0.3, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {Size = UDim2.new(1, -4, 0, targetHeight)})
+                tween:Play()
+                
                 TweenService:Create(arrow, TweenInfo.new(0.3), {Rotation = isDropped and 180 or 0}):Play()
             end)
-        end 
         
 
 function Tab:CreateMultiDropdown(text, defaultSelections, optionsList, callback)
