@@ -1,4 +1,97 @@
-loadstring(game:HttpGet("https://raw.githubusercontent.com/AnhDzaiScript/Setting/refs/heads/main/FastMax.lua"))()
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local Workspace = game:GetService("Workspace")
+local VirtualInputManager = game:GetService("VirtualInputManager")
+
+local Player = Players.LocalPlayer
+local Modules = ReplicatedStorage:WaitForChild("Modules")
+local Net = Modules:WaitForChild("Net")
+local RegisterAttack = Net:WaitForChild("RE/RegisterAttack")
+local RegisterHit = Net:WaitForChild("RE/RegisterHit")
+local ShootGunEvent = Net:WaitForChild("RE/ShootGunEvent")
+local GunValidator = ReplicatedStorage:WaitForChild("Remotes"):WaitForChild("Validator2")
+
+local LocalPlayer = Players.LocalPlayer
+local Net = require(ReplicatedStorage.Modules.Net)
+
+local Remotes = {}
+local Assets = ReplicatedStorage:WaitForChild("Assets")
+
+
+for _, child in ipairs(ReplicatedStorage:WaitForChild("Remotes"):GetChildren()) do
+    if child:IsA("RemoteEvent") then
+        local id = child:GetAttribute("Id")
+        if id then
+            Remotes[id] = child
+        end
+    end
+end
+
+ReplicatedStorage.Remotes.ChildAdded:Connect(function(child)
+    if child:IsA("RemoteEvent") then
+        local id = child:GetAttribute("Id")
+        if id then
+            Remotes[id] = child
+        end
+    end
+end)
+
+local function GetClosestEnemy()
+    local character = LocalPlayer.Character
+    if not character then return nil end
+    
+    local rootPart = character:FindFirstChild("HumanoidRootPart")
+    if not rootPart then return nil end
+
+    local closestEnemy = nil
+    local shortestDistance = 15 -- Max range
+
+    for _, enemy in ipairs(workspace.Enemies.Characters:GetChildren()) do
+        local humanoid = enemy:FindFirstChild("Humanoid")
+        local enemyRoot = enemy:FindFirstChild("HumanoidRootPart")
+        
+        if humanoid and humanoid.Health > 0 and enemyRoot then
+            local distance = (rootPart.Position - enemyRoot.Position).Magnitude
+            if distance < shortestDistance then
+                closestEnemy = enemy
+                shortestDistance = distance
+            end
+        end
+    end
+    return closestEnemy
+end
+
+local function Attack()
+    local character = LocalPlayer.Character
+    if not character then return end
+    
+    local tool = character:FindFirstChildOfClass("Tool")
+    if not tool or tool:GetAttribute("WeaponType") ~= "Melee" then return end
+
+    if Remotes["RE/RegisterAttack"] then
+        Remotes["RE/RegisterAttack"]:FireServer()
+    end
+
+    local enemy = GetClosestEnemy()
+    if enemy then
+        local enemyHead = enemy:FindFirstChild("Head")
+        if enemyHead then
+            if Remotes["RE/RegisterHit"] then
+                Remotes["RE/RegisterHit"]:FireServer(enemy, enemyHead)
+            end
+            Net:RemoteEvent("RegisterHit"):FireServer(enemy, enemyHead)
+        end
+    end
+end
+
+
+task.spawn(function()
+    while true do
+        Attack()
+        task.wait(0.1)
+    end
+end)
 
 local function GetBladeHits()
     local targets = {}
@@ -27,11 +120,12 @@ local function AttackAll()
     local equippedWeapon = character:FindFirstChild("EquippedWeapon")
     if not equippedWeapon then return end
 
+    local netModule = game:GetService("ReplicatedStorage"):WaitForChild("Modules"):WaitForChild("Net")
+    
+    netModule:WaitForChild("RE/RegisterAttack"):FireServer(-math.huge)
+    
     local enemies = GetBladeHits()
     if #enemies > 0 then
-        local netModule = game:GetService("ReplicatedStorage"):WaitForChild("Modules"):WaitForChild("Net")
-        netModule:WaitForChild("RE/RegisterAttack"):FireServer(-math.huge)
-        
         local args = {nil, {}}
         for i, v in pairs(enemies) do
             if not args[1] then
@@ -48,27 +142,15 @@ spawn(function()
     while task.wait() do AttackAll() end
 end)
 
-local Players = game:GetService("Players")
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local Workspace = game:GetService("Workspace")
-local VirtualInputManager = game:GetService("VirtualInputManager")
-local RunService = game:GetService("RunService")
 
-local Player = Players.LocalPlayer
-local Modules = ReplicatedStorage:WaitForChild("Modules")
-local Net = Modules:WaitForChild("Net")
-local RegisterAttack = Net:WaitForChild("RE/RegisterAttack")
-local RegisterHit = Net:WaitForChild("RE/RegisterHit")
-local ShootGunEvent = Net:WaitForChild("RE/ShootGunEvent")
-local GunValidator = ReplicatedStorage:WaitForChild("Remotes"):WaitForChild("Validator2")
 
 local Config = {
     AttackDistance = 65,
     AttackMobs = true,
     AttackPlayers = true,
-    AttackCooldown = 0.1, -- Reduced base cooldown for Dungeon buffs
-    ComboResetTime = 0.3,
-    MaxCombo = 4,
+    AttackCooldown = 0,
+    ComboResetTime = 0,
+    MaxCombo = 2,
     HitboxLimbs = {"RightLowerArm", "RightUpperArm", "LeftLowerArm", "LeftUpperArm", "RightHand", "LeftHand"},
     AutoClickEnabled = true
 }
@@ -225,8 +307,9 @@ function FastAttack:UseNormalClick(Character, Humanoid, Cooldown)
     self.EnemyRootPart = nil
     local BladeHits = self:GetBladeHits(Character)
     
+    RegisterAttack:FireServer(Cooldown)
+
     if self.EnemyRootPart then
-        RegisterAttack:FireServer(Cooldown)
         if self.CombatFlags and self.HitFunction then
             self.HitFunction(self.EnemyRootPart, BladeHits)
         else
@@ -237,14 +320,18 @@ end
 
 function FastAttack:UseFruitM1(Character, Equipped, Combo)
     local Targets = self:GetBladeHits(Character)
-    if not Targets[1] then return end
     
-    local Direction = (Targets[1][2].Position - Character:GetPivot().Position).Unit
+    local Direction
+    if Targets[1] then
+        Direction = (Targets[1][2].Position - Character:GetPivot().Position).Unit
+    else
+        Direction = Character:GetPivot().LookVector
+    end
     Equipped.LeftClickRemote:FireServer(Direction, Combo)
 end
 
 function FastAttack:Attack()
-    if not Config.AutoClickEnabled then return end
+    if not Config.AutoClickEnabled or (tick() - self.Debounce) < Config.AttackCooldown then return end
     local Character = Player.Character
     if not Character or not self:IsEntityAlive(Character) then return end
     
@@ -255,15 +342,12 @@ function FastAttack:Attack()
     local ToolTip = Equipped.ToolTip
     if not table.find({"Melee", "Blox Fruit", "Sword", "Gun"}, ToolTip) then return end
     
-    local CurrentCooldown = Equipped:FindFirstChild("Cooldown") and Equipped.Cooldown.Value or Config.AttackCooldown
-    
-    -- Dynamic cooldown check to respect Dungeon buffs
-    if (tick() - self.Debounce) < (CurrentCooldown * 0.7) then return end
-    
+    local Cooldown = Equipped:FindFirstChild("Cooldown") and Equipped.Cooldown.Value or Config.AttackCooldown
     if not self:CheckStun(Character, Humanoid, ToolTip) then return end
     
     local Combo = self:GetCombo()
-    self.Debounce = tick()
+    Cooldown = Cooldown + (Combo >= Config.MaxCombo and 0.05 or 0)
+    self.Debounce = Combo >= Config.MaxCombo and ToolTip ~= "Gun" and (tick() + 0.05) or tick()
     
     if ToolTip == "Blox Fruit" and Equipped:FindFirstChild("LeftClickRemote") then
         self:UseFruitM1(Character, Equipped, Combo)
@@ -273,11 +357,23 @@ function FastAttack:Attack()
             self:ShootInTarget(Target.Position)
         end
     else
-        self:UseNormalClick(Character, Humanoid, CurrentCooldown)
+        self:UseNormalClick(Character, Humanoid, Cooldown)
     end
 end
 
 local AttackInstance = FastAttack.new()
-table.insert(AttackInstance.Connections, RunService.Heartbeat:Connect(function()
+table.insert(AttackInstance.Connections, RunService.Stepped:Connect(function()
     AttackInstance:Attack()
 end))
+
+for _, v in pairs(getgc(true)) do
+    if typeof(v) == "function" and iscclosure(v) then
+        local name = debug.getinfo(v).name
+        if name == "Attack" or name == "attack" or name == "RegisterHit" then
+            hookfunction(v, function(...)
+                AttackInstance:Attack()
+                return v(...)
+            end)
+        end
+    end
+end
