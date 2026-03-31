@@ -2,14 +2,11 @@ local CFG = getgenv().Config
 local ply = game:GetService("Players")
 local plr = ply.LocalPlayer
 
--- Wait for character load
 if not plr.Character or not plr.Character:FindFirstChild("HumanoidRootPart") then
     repeat task.wait() until plr.Character and plr.Character:FindFirstChild("HumanoidRootPart")
 end
 
--------------------------------------------------------------------------
--- UI SECTION (CLOUD THEME BY NAA) --------------------------------------
--------------------------------------------------------------------------
+
 local CoreGui, RunService, TweenService = game:GetService("CoreGui"), game:GetService("RunService"), game:GetService("TweenService")
 
 local g = Instance.new("ScreenGui")
@@ -98,7 +95,6 @@ function _G.SetMobStatus(text)
     end
 end
 
--- UI Effects Loop
 local r = 0
 task.spawn(function()
     while true do
@@ -124,9 +120,46 @@ end)
 
 TweenService:Create(m, TweenInfo.new(1.2, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {Position = UDim2.new(0.5, 0, 0, 20)}):Play()
 
--------------------------------------------------------------------------
--- LOGIC SECTION --------------------------------------------------------
--------------------------------------------------------------------------
+
+local function AreRequiredPlayersPresent()
+    local requiredUsers = {}
+    
+    if CFG["Account Join Raid"] and CFG["Account Join Raid"].Users then
+        for _, name in pairs(CFG["Account Join Raid"].Users) do
+            if name ~= "" then requiredUsers[name:lower()] = true end
+        end
+    end
+    
+    if CFG["Account Join"] and CFG["Account Join"].Users then
+        for _, name in pairs(CFG["Account Join"].Users) do
+            if name ~= "" then requiredUsers[name:lower()] = true end
+        end
+    end
+
+    local targetList = {}
+    for name, _ in pairs(requiredUsers) do table.insert(targetList, name) end
+    local requiredCount = #targetList
+
+    if requiredCount == 0 then return true end
+
+    local foundCount = 0
+    local currentPlayers = ply:GetPlayers()
+    
+    for _, player in pairs(currentPlayers) do
+        if requiredUsers[player.Name:lower()] then
+            foundCount = foundCount + 1
+        end
+    end
+    
+    if foundCount < requiredCount then
+        _G.SetFarmStatus("Waiting: " .. foundCount .. "/" .. requiredCount .. " Players")
+        return false
+    else
+        return true
+    end
+end
+
+
 _G.AccjoinRaid = false
 _G.AccountJoin = false
 _G.StartDuggeon = false
@@ -140,7 +173,6 @@ local Dungeons = {
     {name = "Dungeon 3", center = Vector3.new(-231.965, 232.758, -433.251)},
 }
 
--- [PHẦN SỬA: TẠO NỀN MÓNG CHỐNG RƠI]
 local function CreatePlatform(pos)
     local pName = "Meyy_Platform_AntiFall"
     local old = workspace:FindFirstChild(pName)
@@ -159,7 +191,7 @@ end
 local function tp(cframe)
     if plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") then
         plr.Character.HumanoidRootPart.CFrame = cframe
-        CreatePlatform(cframe.Position) -- Tạo móng mỗi khi dịch chuyển
+        CreatePlatform(cframe.Position)
     end
 end
 
@@ -167,7 +199,7 @@ local function getPlayersInDungeon(center)
     local count = 0
     for _, player in pairs(ply:GetPlayers()) do
         if player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
-            -- Tính khoảng cách ngang (X, Z) để không bị lỗi khi bay cao
+
             local pPos = player.Character.HumanoidRootPart.Position
             local dist = (Vector2.new(pPos.X, pPos.Z) - Vector2.new(center.X, center.Z)).Magnitude
             if dist <= DungeonRadius then
@@ -178,7 +210,6 @@ local function getPlayersInDungeon(center)
     return count
 end
 
--- Logic Leader
 local function JoinDungeonTeleport()
     while task.wait(0.5) do
         if _G.AccjoinRaid then
@@ -212,7 +243,6 @@ local function Accountteleaccjoin()
                 local leaderPos = leader.Character.HumanoidRootPart.Position
                 local isLeaderInPad = false
                 for _, dungeon in pairs(Dungeons) do
-                    -- Kiểm tra leader có ở trên pad không (chỉ xét X, Z)
                     local dist = (Vector2.new(leaderPos.X, leaderPos.Z) - Vector2.new(dungeon.center.X, dungeon.center.Z)).Magnitude
                     if dist <= DungeonRadius then
                         isLeaderInPad = true
@@ -236,7 +266,6 @@ local function Accountteleaccjoin()
     end
 end
 
--- Logic Start
 local function StartDungeon()
     while task.wait(0.5) do
         if _G.StartDuggeon then
@@ -255,8 +284,15 @@ local function StartDungeon()
     end
 end
 
--- Role Initialization
+
 local function Init()
+    while not AreRequiredPlayersPresent() do
+        task.wait(2)
+    end
+    
+    _G.SetFarmStatus("Status Farm: Team Ready")
+    task.wait(1)
+
     local name = plr.Name:lower()
     local isLeader = false
     local isMember = false
@@ -322,7 +358,7 @@ task.spawn(function()
 end)
 
 task.spawn(function()
-    local lastDiffSent = "" -- Chặn spam Difficulty
+    local lastDiffSent = ""
     while task.wait(2) do
         pcall(function()
             local hrp = plr.Character and plr.Character:FindFirstChild("HumanoidRootPart")
