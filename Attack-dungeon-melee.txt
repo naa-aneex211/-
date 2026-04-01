@@ -288,12 +288,6 @@ task.spawn(function()
     end
 
     while true do 
-        workspace.Gravity = 0
-        if not isAlive() then
-            _G.TargetMob = nil
-            updateUI("Character Died", "Resetting")
-            sM(); p.CharacterAdded:Wait(); task.wait(1); continue 
-        end
 
         local isBoss, rNum = iB()
         local currentRoom = getCurrentRoomNumber()
