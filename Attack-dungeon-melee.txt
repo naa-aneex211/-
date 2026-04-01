@@ -316,7 +316,7 @@ task.spawn(function()
                 local waitingForPhase2 = false
                 local phase2Timer = 0
                 
-                local bossStartTime = tick() 
+                -- local bossStartTime = tick() -- [Meyy Update] Tắt đếm giờ để chuyển qua check server
 
                 while isAlive() do
                     workspace.Gravity = 0 
@@ -324,16 +324,40 @@ task.spawn(function()
                     if not checkStillBoss then 
                         _G.TargetMob = nil; 
                         _G.IsBossPhase2 = false 
+                        _G.SawBossLowHP = false -- [Meyy Update] Clear tracking nha
                         break 
                     end
 
-                    if _G.KillH and (tick() - bossStartTime) > 20 then
-                        local S = game:GetService("Players").LocalPlayer
-                        if S.Character and S.Character:FindFirstChild("Humanoid") then
+                    -- [Meyy Update] Comment lại đoạn đếm 20s
+                    -- if _G.KillH and (tick() - bossStartTime) > 20 then
+                    --     local S = game:GetService("Players").LocalPlayer
+                    --     if S.Character and S.Character:FindFirstChild("Humanoid") then
+                    --         S.Character.Humanoid.Health = 0
+                    --     end
+                    --     break
+                    -- end
+
+                    -- [Meyy Update] Check xem có ai trong server ngỏm chưa, ngỏm là mình hẻo theo ngay nhó!
+                    local someoneDied = false
+                    for _, pl in ipairs(P:GetPlayers()) do
+                        local plChar = pl.Character
+                        if plChar then
+                            local plHum = plChar:FindFirstChild("Humanoid")
+                            if plHum and plHum.Health <= 0 then
+                                someoneDied = true
+                                break
+                            end
+                        end
+                    end
+
+                    if someoneDied and isAlive() then
+                        local S = P.LocalPlayer
+                        if S.Character and S.Character:FindFirstChild("Humanoid") and S.Character.Humanoid.Health > 0 then
                             S.Character.Humanoid.Health = 0
                         end
-                        break
+                        break -- Thoát vòng lặp để làm mới ik (๑•́ ₃ •̀๑)
                     end
+                    -- [End Meyy Update]
 
                     local priorityTarget = nil
                     local activeBoss = nil
@@ -364,13 +388,24 @@ task.spawn(function()
                         if bHRP and mHRP and bHum then
                             local hpPercent = (bHum.Health / (bHum.MaxHealth > 0 and bHum.MaxHealth or 100)) * 100
                             
+                            -- [Meyy Update] Đoạn này xịn nè, fix kẹt lỗi phase 1 đó!
                             if rNum == 15 and activeBoss and not _G.IsBossPhase2 then
+                                if hpPercent < 37 then
+                                    _G.SawBossLowHP = true -- Đánh dấu lại là nó đã tụt máu
+                                end
+                                
+                                -- Nếu đã từng tụt máu mà tự nhiên máu lại đầy thì đích thị là phase 2 rùi dọ!
+                                if _G.SawBossLowHP and hpPercent > 50 then
+                                    _G.IsBossPhase2 = true
+                                end
+
                                 if not waitingForPhase2 and hpPercent < 37 then
                                     waitingForPhase2 = true; phase2Timer = tick() + 4
                                 elseif waitingForPhase2 and tick() >= phase2Timer then 
                                     _G.IsBossPhase2 = true -- Ghi nhớ dạng 2 dù có bị reset
                                 end
                             end
+                            -- [End Meyy Update]
 
                             local targetPos
                             if activeBoss then
