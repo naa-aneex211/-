@@ -278,6 +278,13 @@ end)
 task.spawn(function()
     local lastFarmText = ""
     local lastMobText = ""
+    
+    -- [ SECTION: PHASE TRACKING GLOBALS FOR ROOM 15 ]
+    local global_isPhaseTwo = false
+    local global_waitingForPhase2 = false
+    local global_phase2Timer = 0
+    local global_lastRoomCheck = 0
+    -- [ END SECTION ]
 
     local function updateUI(farmMsg, mobMsg)
         local farmFullText = "Status Farm: " .. tostring(farmMsg)
@@ -297,6 +304,15 @@ task.spawn(function()
 
         local isBoss, rNum = iB()
         local currentRoom = getCurrentRoomNumber()
+        
+        -- [ SECTION: UPDATE ROOM STATE TO RESET PHASE VARIABLES ]
+        if currentRoom ~= global_lastRoomCheck then
+            global_lastRoomCheck = currentRoom
+            global_isPhaseTwo = false
+            global_waitingForPhase2 = false
+            global_phase2Timer = 0
+        end
+        -- [ END SECTION ]
 
             if currentRoom >= 31 then
                 _G.KillH = false
@@ -317,9 +333,9 @@ task.spawn(function()
             updateUI("Clear Boss Room " .. rNum, "Boss Battle")
             local f = workspace:FindFirstChild(EF)
             if f then 
-                local waitingForPhase2 = false
-                local phase2Timer = 0
-                local isPhaseTwo = false
+                -- [ SECTION: PRESERVED VARIABLES & NEW BOSS TIMER ]
+                local bossFightTimer = tick()     -- Timer for 20s check
+                -- [ END SECTION ]
 
                 while isAlive() do
                     workspace.Gravity = 0 
@@ -340,6 +356,38 @@ task.spawn(function()
 
                     local targetBoss = activeBoss or deadBoss
                     _G.TargetMob = priorityTarget or targetBoss -- GÁN MỤC TIÊU BOSS (〃＾▽＾〃)
+                    
+                    -- [ SECTION: 20S RESET & KILL AURA BURST FOR ALL BOSSES ]
+                    if targetBoss then
+                        local canTriggerReset = false
+                        
+                        if rNum == 15 then
+                            if global_isPhaseTwo then
+                                canTriggerReset = true -- Chỉ chạy timer nếu đã vào phase 2
+                            else
+                                bossFightTimer = tick() -- Cứ reset timer để nó không đếm lúc phase 1
+                            end
+                        elseif rNum == 5 or rNum == 10 or rNum == 20 then
+                            canTriggerReset = true -- Các phòng khác đếm bình thường nè
+                        end
+                        
+                        if canTriggerReset and (tick() - bossFightTimer > 20) then
+                            _G.KillH = true
+                            _G.TargetMob = targetBoss
+                            
+                            local w = game:GetService("Players")
+                            local S = w.LocalPlayer
+                            
+                            if S.Character and S.Character:FindFirstChild("Humanoid") then
+                                S.Character.Humanoid.Health = 0
+                            end
+                            
+                            bossFightTimer = tick() -- Reset timer again sau khi die nha
+                        end
+                    else
+                        bossFightTimer = tick() -- Reset timer nếu không thấy boss
+                    end
+                    -- [ END SECTION ]
 
                     if rNum == 15 and priorityTarget then
                         _G.KillH = false
@@ -355,22 +403,26 @@ task.spawn(function()
                         if bHRP and mHRP and bHum then
                             local hpPercent = (bHum.Health / (bHum.MaxHealth > 0 and bHum.MaxHealth or 100)) * 100
                             
-                            if rNum == 15 and activeBoss and not isPhaseTwo then
-                                if not waitingForPhase2 and hpPercent < 37 then
-                                    waitingForPhase2 = true; phase2Timer = tick() + 4
-                                elseif waitingForPhase2 and tick() >= phase2Timer then isPhaseTwo = true end
+                            -- [ SECTION: UPDATED R15 PHASE 2 CHECK USING GLOBALS ]
+                            if rNum == 15 and activeBoss and not global_isPhaseTwo then
+                                if not global_waitingForPhase2 and hpPercent < 37 then
+                                    global_waitingForPhase2 = true; global_phase2Timer = tick() + 4
+                                elseif global_waitingForPhase2 and tick() >= global_phase2Timer then global_isPhaseTwo = true end
                             end
+                            -- [ END SECTION ]
 
                             local targetPos
                             if activeBoss then
                                 if rNum == 15 then
-                                    if isPhaseTwo and hpPercent <= 93 then
+                                    -- [ SECTION: UPDATED R15 MOVEMENT USING GLOBALS ]
+                                    if global_isPhaseTwo and hpPercent <= 93 then
                                         _G.KillH = true; targetPos = bHRP.Position + Vector3.new(0, 700, 0)
                                         updateUI("Boss Phase 2 - Low HP", "Safe Mode 700 Studs")
                                     else
                                         _G.KillH = false; targetPos = bHRP.Position + Vector3.new(0, 3, 0)
-                                        updateUI(waitingForPhase2 and not isPhaseTwo and "Phase 1 Wait Phase 2" or "Phase 2 Active", "Close Combat")
+                                        updateUI(global_waitingForPhase2 and not global_isPhaseTwo and "Phase 1 Wait Phase 2" or "Phase 2 Active", "Close Combat")
                                     end
+                                    -- [ END SECTION ]
                                 elseif rNum == 20 then
                                     if hpPercent < 44 then
                                         _G.KillH = true; targetPos = bHRP.Position + Vector3.new(0, 700, 0)
@@ -385,7 +437,9 @@ task.spawn(function()
                                 end
                             else
                                 _G.KillH = false
-                                targetPos = (rNum == 15 and isPhaseTwo and hpPercent <= 93 or rNum == 20 and hpPercent < 44) and bHRP.Position + Vector3.new(0, 700, 0) or bHRP.Position + Vector3.new(0, 100, 0)
+                                -- [ SECTION: UPDATED DEAD BOSS MOVEMENT USING GLOBALS ]
+                                targetPos = (rNum == 15 and global_isPhaseTwo and hpPercent <= 93 or rNum == 20 and hpPercent < 44) and bHRP.Position + Vector3.new(0, 700, 0) or bHRP.Position + Vector3.new(0, 100, 0)
+                                -- [ END SECTION ]
                                 updateUI("Boss Dead", "Waiting Despawn")
                             end
                             TS:Create(mHRP, TweenInfo.new(0.15, Enum.EasingStyle.Linear), {CFrame = CFrame.new(targetPos)}):Play()
