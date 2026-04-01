@@ -130,7 +130,7 @@ task.spawn(function()
     while task.wait(0.5) do
         local success = autoPickBuff()
         if success then
-            task.wait(2.5) 
+            task.wait(0.5) 
         end
     end
 end)
