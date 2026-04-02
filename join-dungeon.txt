@@ -1,4 +1,4 @@
--- [[ VARIABLES SECTION ]]
+
 local DungeonHubID = 73902483975735
 local TeleportService = game:GetService("TeleportService")
 local Players = game:GetService("Players")
@@ -6,7 +6,6 @@ local CoreGui = game:GetService("CoreGui")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local plr = Players.LocalPlayer
 
--- [[ UI CONSTRUCTION SECTION ]]
 local function CreateStatusUI()
     if CoreGui:FindFirstChild("AnnStatusUI") then
         CoreGui.AnnStatusUI:Destroy()
@@ -57,7 +56,6 @@ end
 
 local StatusUI = CreateStatusUI()
 
--- [[ UI UPDATE FUNCTION ]]
 local function UpdateUI(found, required)
     if StatusUI then
         StatusUI.Enabled = true
@@ -65,10 +63,11 @@ local function UpdateUI(found, required)
     end
 end
 
--- [[ CORE LOGIC SECTION ]]
 local function AreRequiredPlayersPresent()
-    -- Đã sửa thành Config (hông có s) rồi nhó ann (≧◡≦)
-    local targetUsers = getgenv().Config["Account Join"].Users
+    local config = getgenv().Config
+    if not config or not config["Account Join"] then return true end
+    
+    local targetUsers = config["Account Join"].Users
     local validTargetNames = {}
     
     for _, name in pairs(targetUsers) do
@@ -104,7 +103,6 @@ local function AreRequiredPlayersPresent()
     end
 end
 
--- [[ TEAM JOIN FUNCTION ]]
 local function JoinTeam()
     local remote = ReplicatedStorage:FindFirstChild("Remotes") and ReplicatedStorage.Remotes:FindFirstChild("CommF_")
     if remote then
@@ -112,8 +110,7 @@ local function JoinTeam()
     end
 end
 
--- [[ MAIN EXECUTION ]]
-local function AutoJoinHub()
+local function AutoJoinDungeon()
     if game.PlaceId ~= DungeonHubID then
         while task.wait(2) do
             if AreRequiredPlayersPresent() then
@@ -121,18 +118,28 @@ local function AutoJoinHub()
                     repeat 
                         JoinTeam()
                         task.wait(0.5)
-                    until (plr.Team ~= nil and tostring(plr.Team) ~= "Neutral") or game.PlaceId == DungeonHubID
+                    until (plr.Team ~= nil and tostring(plr.Team) ~= "Neutral")
                 end)
                 
                 task.wait(1.5)
-                TeleportService:Teleport(DungeonHubID, plr)
-                break
+                
+                local dungeonRemote = ReplicatedStorage:WaitForChild("Modules")
+                    :WaitForChild("Net")
+                    :WaitForChild("RF/DungeonNPCNetworkFunction")
+                
+                if dungeonRemote then
+                    local args = {
+                        "TeleportToDungeonHub",
+                        false
+                    }
+                    dungeonRemote:InvokeServer(unpack(args))
+                    break
+                end
             end
         end
     else
         if StatusUI then StatusUI:Destroy() end
-        print("Welcome to dungeon hub.")
     end
 end
 
-AutoJoinHub()
+AutoJoinDungeon()
