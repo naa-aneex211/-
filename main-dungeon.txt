@@ -1,47 +1,4 @@
-
-local plr = game.Players.LocalPlayer
-
-local function GetRole()
-    local myName = plr.Name:lower()
-    
-    if getgenv().Config and getgenv().Config["Account Join Raid"] then
-        for _, n in pairs(getgenv().Config["Account Join Raid"].Users) do
-            if n:lower() == myName then return "Account Join Raid" end
-        end
-    end
-    
-    if getgenv().Config and getgenv().Config["Account Join"] then
-        for _, n in pairs(getgenv().Config["Account Join"].Users) do
-            if n:lower() == myName then return "Account Join" end
-        end
-    end
-    
-    return nil
-end
-
-local myRole = GetRole()
-
-if myRole == "Account Join Raid" then
-    local m1_src = game:HttpGet("https://raw.githubusercontent.com/naa-aneex211/-/refs/heads/main/m1-attack.txt")
-    if m1_src then
-        task.spawn(function()
-            loadstring(m1_src)()
-        end)
         loadstring(game:HttpGet("https://raw.githubusercontent.com/naa-aneex211/-/refs/heads/main/attack-dungeon-fruit.txt"))()
-    end
-
-elseif myRole == "Account Join" then
-    local m1_src = game:HttpGet("https://raw.githubusercontent.com/naa-aneex211/-/refs/heads/main/m1-attack.txt")
-    if m1_src then
-        task.spawn(function()
-            loadstring(m1_src)()
-        end)
-        loadstring(game:HttpGet("https://raw.githubusercontent.com/naa-aneex211/-/refs/heads/main/Attack-dungeon-melee.txt"))()
-    end
-
-else
-    warn("Account not in Config. Script Stopped.")
-end
 
 loadstring(game:HttpGet("https://raw.githubusercontent.com/naa-aneex211/-/refs/heads/main/no-gravity2.txt"))()
 
