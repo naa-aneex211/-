@@ -539,7 +539,7 @@ end
                             canTriggerReset = true 
                         end
                         
-                        if someoneDied or (canTriggerReset and (tick() - bossFightTimer > 20)) then
+                        if someoneDied or (canTriggerReset and (tick() - bossFightTimer > 4)) then
                             _G.KillH = true
                             _G.TargetMob = targetBoss
                             if p.Character and p.Character:FindFirstChild("Humanoid") and p.Character.Humanoid.Health > 0 then
