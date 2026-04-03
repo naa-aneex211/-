@@ -129,9 +129,9 @@ local function CreateStatusLabel(name, pos, text)
     return label, txtGradient
 end
 
-_G.StatusItemLabel, _G.TopInfoGradient = CreateStatusLabel("TopInfo", 10, "CLOUDY HUB")
-_G.StatusFarmLabel, _G.FarmGradient = CreateStatusLabel("StatusFarm", 35, "Status Farm: N/A")
-_G.StatusMobLabel, _G.MobGradient = CreateStatusLabel("StatusMob", 60, "Farm Mob: N/A")
+_G.StatusItemLabel, _G.TopInfoGradient = CreateStatusLabel("TopInfo", 10, "ʚ₊˚meყყ ♡ Hub˚₊ɞ")
+_G.StatusFarmLabel, _G.FarmGradient = CreateStatusLabel("StatusFarm", 35, "ʚ₊˚Status Farm: N/A˚₊ɞ")
+_G.StatusMobLabel, _G.MobGradient = CreateStatusLabel("StatusMob", 60, "ʚ₊˚Farm Mob: N/A˚₊ɞ")
 
 local creditLabel = Instance.new("TextLabel", m)
 creditLabel.Name = "CreditLabel"
@@ -656,7 +656,7 @@ else
                         if x and isAlive() then 
                             _G.KillH = false; _G.TargetMob = nil
                             local pP = x.Position + Vector3.new(0, 25, 0); cP(pP)
-                            h.CFrame = CFrame.new(pP + Vector3.new(0, 3, 0)); task.wait(0.1)
+                            h.CFrame = CFrame.new(pP + Vector3.new(0, 0, 5)); task.wait(0.1)
                             while isAlive() do 
                                 local checkB, _ = iB(); if checkB then break end
                                 local enemiesAlive = 0; local nextTarget = nil
@@ -696,7 +696,7 @@ else
                         if x and isAlive() then 
                             _G.KillH = false; _G.TargetMob = nil
                             local pP = x.Position + Vector3.new(0, 55, 0); cP(pP)
-                            h.CFrame = CFrame.new(pP + Vector3.new(0, 3, 0)); task.wait(0.1)
+                            h.CFrame = CFrame.new(pP + Vector3.new(0, 0, 5)); task.wait(0.1)
                             while isAlive() do 
                                 local checkB, _ = iB(); if checkB then break end
                                 local mList = {}; local enemiesAlive = 0
@@ -714,7 +714,7 @@ else
                                     local hrpE = e:FindFirstChild("HumanoidRootPart")
                                     if hrpE then h.CFrame = hrpE.CFrame; task.wait(TD) end 
                                 end
-                                if isAlive() then _G.TargetMob = nil; _G.KillH = false; h.CFrame = CFrame.new(pP + Vector3.new(0, 3, 0)); task.wait(TD); task.wait(0.1) end
+                                if isAlive() then _G.TargetMob = nil; _G.KillH = false; h.CFrame = CFrame.new(pP + Vector3.new(0, 0, 5)); task.wait(TD); task.wait(0.1) end
                             end 
                         end 
                     else updateUI("Tween To Portal", "Clear") end
@@ -751,7 +751,7 @@ else
                         if x and isAlive() then 
                             _G.KillH = false; _G.TargetMob = nil
                             local pP = x.Position + Vector3.new(0, 25, 0); cP(pP)
-                            h.CFrame = CFrame.new(pP + Vector3.new(0, 3, 0)); task.wait(0.1)
+                            h.CFrame = CFrame.new(pP + Vector3.new(0, 0, 5)); task.wait(0.1)
                             while isAlive() do 
                                 local checkB, _ = iB(); if checkB then break end
                                 local enemiesAlive = 0; local nextTarget = nil
