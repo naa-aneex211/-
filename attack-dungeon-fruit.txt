@@ -455,17 +455,14 @@ task.spawn(function()
         local currentRoom = getCurrentRoomNumber()
         local myRole = getCurrentToolTip()
         
-if currentRoom ~= global_lastRoomCheck then
-    global_lastRoomCheck = currentRoom
-    global_isPhaseTwo = false
-    global_waitingForPhase2 = false
-    global_phase2Timer = 0
-    _G.SawBossLowHP = false
-    _G.KillH = false
-    _G.TargetMob = nil
+        if currentRoom ~= global_lastRoomCheck then
+            global_lastRoomCheck = currentRoom
+            global_isPhaseTwo = false
+            global_waitingForPhase2 = false
+            global_phase2Timer = 0
+        end
     
-    updateUI("Entered Room " .. tostring(currentRoom), "Resetting Logic...")
-end
+
 
         if currentRoom >= 31 then
             _G.KillH = false
