@@ -460,6 +460,9 @@ task.spawn(function()
             global_isPhaseTwo = false
             global_waitingForPhase2 = false
             global_phase2Timer = 0
+            _G.SawBossLowHP = false
+            _G.KillH = false
+            _G.TargetMob = nil
         end
     
 
