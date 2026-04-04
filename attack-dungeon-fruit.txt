@@ -451,15 +451,15 @@ task.spawn(function()
 
     while true do 
 
-
+        local isBoss, rNum = iB()
+        local currentRoom = getCurrentRoomNumber()
+        local myRole = getCurrentToolTip()
+        
         if currentRoom ~= global_lastRoomCheck then
             global_lastRoomCheck = currentRoom
             global_isPhaseTwo = false
             global_waitingForPhase2 = false
             global_phase2Timer = 0
-            _G.SawBossLowHP = false -- Reset cái này để màn 20 tính lại từ đầu nhó
-            _G.KillH = false
-            _G.TargetMob = nil
         end
     
 
