@@ -576,11 +576,11 @@ task.spawn(function()
                     -------------------------------------------------------------------------
                     -- MOVEMENT & PHASES (SYNCED ROOM 15 & 20) ------------------------------
                     -------------------------------------------------------------------------
-                    -- Xử lý trụ hồi máu cho cả 15 và 20 nè
-                    local isBossRoom, maxRoom = iB()
-                    local currentRoom = getCurrentRoomNumber()
+                    
 
-                    if isBossRoom and (currentRoom == maxRoom) and priorityTarget then
+     -- Xử lý trụ hồi máu cho cả 15 và 20 nè
+                    if (rNum == 15 or rNum == 20) and priorityTarget then
+                        _G.KillH = false
                         updateUI("Boss Healing Props", "Kill Aura OFF")
                         local h = gH(); local r = priorityTarget:FindFirstChild("HumanoidRootPart")
                         if h and r then h.CFrame = r.CFrame * CFrame.new(0, 0, 3) end
@@ -593,6 +593,7 @@ task.spawn(function()
                         if bHRP and mHRP and bHum then
                             local hpPercent = (bHum.Health / (bHum.MaxHealth > 0 and bHum.MaxHealth or 100)) * 100
                             
+                            -- Logic Phase 2 y hệt cho 15 và 20 nhó (｡◕‿◕｡)
                             if (rNum == 15 or rNum == 20) and activeBoss and not global_isPhaseTwo then
                                 if hpPercent < 37 then
                                     _G.SawBossLowHP = true 
@@ -610,44 +611,25 @@ task.spawn(function()
                             local targetPos
                             local combatOffset = (myRole == "Blox Fruit") and 3 or 25
                             
-if activeBoss then
-    if (rNum == 15 or rNum == 20) then
-        if global_isPhaseTwo and hpPercent <= 93 then
-            _G.KillH = true
-            local targetPos = bHRP.Position + Vector3.new(0, 700, 0)
-            
-            mHRP.CFrame = CFrame.new(mHRP.Position.X, targetPos.Y, mHRP.Position.Z)
-            TS:Create(mHRP, TweenInfo.new(0.15, Enum.EasingStyle.Linear), {CFrame = CFrame.new(targetPos.X, targetPos.Y, targetPos.Z)}):Play()
-            
-            updateUI("Boss Phase 2 - Low HP", "Safe Mode 700 Studs")
-        else
-            _G.KillH = false
-            local combatOffset = (myRole == "Blox Fruit") and 3 or 25
-            local targetPos = bHRP.Position + Vector3.new(0, combatOffset, 0)
-            
-            mHRP.CFrame = CFrame.new(mHRP.Position.X, targetPos.Y, mHRP.Position.Z)
-            TS:Create(mHRP, TweenInfo.new(0.15, Enum.EasingStyle.Linear), {CFrame = CFrame.new(targetPos.X, targetPos.Y, targetPos.Z)}):Play()
-            
-            updateUI(global_waitingForPhase2 and not global_isPhaseTwo and "Phase 1 Wait Phase 2" or "Phase 2 Active", "Close Combat")
-        end
-    else
-        _G.KillH = true
-        local targetPos = bHRP.Position + Vector3.new(0, 400, 0)
-        
-        mHRP.CFrame = CFrame.new(mHRP.Position.X, targetPos.Y, mHRP.Position.Z)
-        TS:Create(mHRP, TweenInfo.new(0.15, Enum.EasingStyle.Linear), {CFrame = CFrame.new(targetPos.X, targetPos.Y, targetPos.Z)}):Play()
-        
-        updateUI("Boss Room " .. rNum, "Standard Farm")
-    end
-else
-    _G.KillH = false
-    local targetPos = ((rNum == 15 or rNum == 20) and global_isPhaseTwo and hpPercent <= 93) and bHRP.Position + Vector3.new(0, 700, 0) or bHRP.Position + Vector3.new(0, 100, 0)
-    
-    mHRP.CFrame = CFrame.new(mHRP.Position.X, targetPos.Y, mHRP.Position.Z)
-    TS:Create(mHRP, TweenInfo.new(0.15, Enum.EasingStyle.Linear), {CFrame = CFrame.new(targetPos.X, targetPos.Y, targetPos.Z)}):Play()
-    
-    updateUI("Boss Dead", "Waiting Despawn")
-end
+                            if activeBoss then
+                                if (rNum == 15 or rNum == 20) then
+                                    if global_isPhaseTwo and hpPercent <= 93 then
+                                        _G.KillH = true; targetPos = bHRP.Position + Vector3.new(0, 700, 0)
+                                        updateUI("Boss Phase 2 - Low HP", "Safe Mode 700 Studs")
+                                    else
+                                        _G.KillH = false; targetPos = bHRP.Position + Vector3.new(0, combatOffset, 0)
+                                        updateUI(global_waitingForPhase2 and not global_isPhaseTwo and "Phase 1 Wait Phase 2" or "Phase 2 Active", "Close Combat")
+                                    end
+                                else
+                                    _G.KillH = true; targetPos = bHRP.Position + Vector3.new(0, 400, 0)
+                                    updateUI("Boss Room " .. rNum, "Standard Farm")
+                                end
+                            else
+                                _G.KillH = false
+                                -- Bay lên cao khi Boss chết nếu đang ở Phase 2 y hệt màn 15 nhó
+                                targetPos = ((rNum == 15 or rNum == 20) and global_isPhaseTwo and hpPercent <= 93) and bHRP.Position + Vector3.new(0, 700, 0) or bHRP.Position + Vector3.new(0, 100, 0)
+                                updateUI("Boss Dead", "Waiting Despawn")
+                            end
                             TS:Create(mHRP, TweenInfo.new(0.15, Enum.EasingStyle.Linear), {CFrame = CFrame.new(targetPos)}):Play()
                         end
                         task.wait(0.1)
@@ -659,7 +641,7 @@ end
                 end
             end
             task.wait(0.1) 
-
+                       
         ----------------------------------------------------------------
 else 
             _G.KillH = false; _G.TargetMob = nil
