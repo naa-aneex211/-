@@ -394,27 +394,49 @@ local ValidTargets = {
 }
 
 Attack.Alive = function(model)
-    if not model then return end
+    if not model then return false end
     local Humanoid = model:FindFirstChild("Humanoid")
     return Humanoid and Humanoid.Health > 0
+end
+
+local function isModelEmpty(model)
+    if not model or not model.Parent then return true end
+    return #model:GetChildren() == 0
 end
 
 task.spawn(function()
     while task.wait(Sec) do
         if _G.KillH and _G.TargetMob then
             local v = _G.TargetMob
+            
             if v and v.Parent and ValidTargets[v.Name] and Attack.Alive(v) then
                 pcall(function()
-                    if sethiddenproperty then pcall(sethiddenproperty, game.Players.LocalPlayer, "SimulationRadius", math.huge) end
+                    if sethiddenproperty then 
+                        pcall(sethiddenproperty, game.Players.LocalPlayer, "SimulationRadius", math.huge) 
+                    end
+                    
                     v:BreakJoints()
                     if v:FindFirstChild("Humanoid") then v.Humanoid.Health = 0 end
-                    if v:FindFirstChild("HumanoidRootPart") then v.HumanoidRootPart.Size = Vector3.new(60, 60, 60) end
+                    if v:FindFirstChild("HumanoidRootPart") then 
+                        v.HumanoidRootPart.Size = Vector3.new(60, 60, 60) 
+                    end
                     
-                    task.wait(0.1) 
-                    local Players = game:GetService("Players")
-                    local LocalPlayer = Players.LocalPlayer
-                    if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
-                        LocalPlayer.Character.Humanoid.Health = 0
+                    task.wait(0.1)
+                    
+                    if not isModelEmpty(v) then
+                        
+                        local hum = v:FindFirstChild("Humanoid")
+                        if hum and hum.Health <= 0 then
+                            
+                            if v.Name ~= "Gas Knight" then
+                                local Players = game:GetService("Players")
+                                local LocalPlayer = Players.LocalPlayer
+                                if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
+                                    LocalPlayer.Character.Humanoid.Health = 0
+                                end
+                            end
+                            
+                        end
                     end
                 end)
             end
@@ -555,10 +577,11 @@ task.spawn(function()
                     -------------------------------------------------------------------------
                     -- MOVEMENT & PHASES (SYNCED ROOM 15 & 20) ------------------------------
                     -------------------------------------------------------------------------
-local isBossRoom, maxRoom = iB()
-local currentRoom = getCurrentRoomNumber()
-if isBossRoom and (currentRoom == maxRoom) and priorityTarget then
+                    -- Xử lý trụ hồi máu cho cả 15 và 20 nè
+                    local isBossRoom, maxRoom = iB()
+                    local currentRoom = getCurrentRoomNumber()
 
+                    if isBossRoom and (currentRoom == maxRoom) and priorityTarget then
                         updateUI("Boss Healing Props", "Kill Aura OFF")
                         local h = gH(); local r = priorityTarget:FindFirstChild("HumanoidRootPart")
                         if h and r then h.CFrame = r.CFrame * CFrame.new(0, 0, 3) end
@@ -571,7 +594,6 @@ if isBossRoom and (currentRoom == maxRoom) and priorityTarget then
                         if bHRP and mHRP and bHum then
                             local hpPercent = (bHum.Health / (bHum.MaxHealth > 0 and bHum.MaxHealth or 100)) * 100
                             
-                            -- Logic Phase 2 y hệt cho 15 và 20 nhó (｡◕‿◕｡)
                             if (rNum == 15 or rNum == 20) and activeBoss and not global_isPhaseTwo then
                                 if hpPercent < 37 then
                                     _G.SawBossLowHP = true 
@@ -627,6 +649,18 @@ else
     
     updateUI("Boss Dead", "Waiting Despawn")
 end
+                            TS:Create(mHRP, TweenInfo.new(0.15, Enum.EasingStyle.Linear), {CFrame = CFrame.new(targetPos)}):Play()
+                        end
+                        task.wait(0.1)
+                    else
+                        _G.KillH = false; _G.TargetMob = nil
+                        if fE() then break end
+                        task.wait(0.1)
+                    end
+                end
+            end
+            task.wait(0.1) 
+
         ----------------------------------------------------------------
 else 
             _G.KillH = false; _G.TargetMob = nil
