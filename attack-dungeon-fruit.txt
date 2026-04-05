@@ -554,14 +554,13 @@ task.spawn(function()
 
                     if targetBoss then
                         local canTriggerReset = false
-                        -- Á~ Màn 20 giờ cũng chỉ reset khi đã vào Phase 2 y hệt màn 15 nhó
                         if rNum == 15 or rNum == 20 then
                             if global_isPhaseTwo then canTriggerReset = true else bossFightTimer = tick() end
                         elseif rNum == 5 or rNum == 10 then
                             canTriggerReset = true 
                         end
                         
-                        if someoneDied or (canTriggerReset and (tick() - bossFightTimer > 4)) then
+                        if someoneDied or (canTriggerReset and (tick() - bossFightTimer > 20)) then
                             _G.KillH = true
                             _G.TargetMob = targetBoss
                             if p.Character and p.Character:FindFirstChild("Humanoid") and p.Character.Humanoid.Health > 0 then
