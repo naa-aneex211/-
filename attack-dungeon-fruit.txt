@@ -1,16 +1,4 @@
-getgenv().Config = {
-    ["Account Join"] = { 
-        Users = {
-        "",
-    }, 
-        ToolTip = "Blox Fruit" 
-    }, 
-    ["Account Join Raid"] = { 
-        Users = { "" }, 
-        ToolTip = "Blox Fruit" 
-    }, 
-    ["Select Difficulty"] = "Hard"  -- "Hard" , ... 
-}
+
 local R = game:GetService("RunService")
 local P = game:GetService("Players")
 local TS = game:GetService("TweenService")
