@@ -389,8 +389,7 @@ local ValidTargets = {
     ["Zero"] = true,
     ["Gas Knight"] = true,
     ["Kitsune Lord"] = true,
-    ["Ancient Beast"] = true,
-    ["Raider"] = true
+    ["Ancient Beast"] = true
 }
 
 Attack.Alive = function(model)
