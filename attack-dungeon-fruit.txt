@@ -577,11 +577,67 @@ task.spawn(function()
                     -- MOVEMENT & PHASES (SYNCED ROOM 15 & 20) ------------------------------
                     -------------------------------------------------------------------------
                     
+ if (rNum == 15 or rNum == 20) and priorityTarget and priorityTarget:FindFirstChild("HumanoidRootPart") then
+                        _G.KillH = false
+                        updateUI("Boss Healing Props", "Kill Aura OFF")
+                        local h = gH(); local r = priorityTarget:FindFirstChild("HumanoidRootPart")
+                        if h and r then 
+                            TS:Create(h, TweenInfo.new(0.15, Enum.EasingStyle.Linear), {CFrame = r.CFrame * CFrame.new(0, 0, 3)}):Play()
+                        end
+                        task.wait(0.1)
+                    elseif targetBoss and targetBoss:FindFirstChild("HumanoidRootPart") then
+                        local bHRP = targetBoss:FindFirstChild("HumanoidRootPart")
+                        local bHum = targetBoss:FindFirstChild("Humanoid")
+                        local mHRP = gH()
+                        
+                        if bHRP and mHRP and bHum then
+                            local hpPercent = (bHum.Health / (bHum.MaxHealth > 0 and bHum.MaxHealth or 100)) * 100
+                            
+                            if (rNum == 15 or rNum == 20) and activeBoss and not global_isPhaseTwo then
+                                if hpPercent < 37 then
+                                    _G.SawBossLowHP = true 
+                                end
+                                if _G.SawBossLowHP and hpPercent > 50 then
+                                    global_isPhaseTwo = true
+                                end
+                                if not global_waitingForPhase2 and hpPercent < 37 then
+                                    global_waitingForPhase2 = true; global_phase2Timer = tick() + 4
+                                elseif global_waitingForPhase2 and tick() >= global_phase2Timer then 
+                                    global_isPhaseTwo = true 
+                                end
+                            end
 
--- Xử lý trụ hồi máu cho cả 15 và 20 nè
-                    local isBossRoom, maxRoom = iB()
-                    local currentRoom = getCurrentRoomNumber()
-                    if isBossRoom and (currentRoom == maxRoom) and priorityTarget then
+                            local targetPos
+                            local combatOffset = (myRole == "Blox Fruit") and 3 or 25
+                            
+                            if activeBoss then
+                                if (rNum == 15 or rNum == 20) then
+                                    if global_isPhaseTwo and hpPercent <= 93 then
+                                        _G.KillH = true; targetPos = bHRP.Position + Vector3.new(0, 700, 0)
+                                        updateUI("Boss Phase 2 - Low HP", "Safe Mode 700 Studs")
+                                    else
+                                        _G.KillH = false; targetPos = bHRP.Position + Vector3.new(0, combatOffset, 0)
+                                        updateUI(global_waitingForPhase2 and not global_isPhaseTwo and "Phase 1 Wait Phase 2" or "Phase 2 Active", "Close Combat")
+                                    end
+                                else
+                                    _G.KillH = true; targetPos = bHRP.Position + Vector3.new(0, 400, 0)
+                                    updateUI("Boss Room " .. rNum, "Standard Farm")
+                                end
+                            else
+                                _G.KillH = false
+                                targetPos = ((rNum == 15 or rNum == 20) and global_isPhaseTwo and hpPercent <= 93) and bHRP.Position + Vector3.new(0, 700, 0) or bHRP.Position + Vector3.new(0, 100, 0)
+                                updateUI("Boss Dead", "Waiting Despawn")
+                            end
+                            
+                            TS:Create(mHRP, TweenInfo.new(0.15, Enum.EasingStyle.Linear), {CFrame = CFrame.new(targetPos)}):Play()
+                        end
+                        task.wait(0.1)
+                    else
+                        _G.KillH = false; _G.TargetMob = nil
+                        if fE() then break end
+                        task.wait(0.1)
+                    end
+
                         _G.KillH = false
                         updateUI("Boss Healing Props", "Kill Aura OFF")
                         local h = gH(); local r = priorityTarget:FindFirstChild("HumanoidRootPart")
