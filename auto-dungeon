@@ -463,7 +463,6 @@ task.spawn(function()
     local global_roomEntryTime = 0 
 
     local function updateUI(farmMsg, mobMsg)
-        -- [meyy~ quăng update UI vô task.spawn để hông làm nghẽn game logic đó nha!]
         task.spawn(function()
             local farmFullText = "Status Farm: " .. tostring(farmMsg)
             local mobFullText = "Farm Mob: " .. tostring(mobMsg)
@@ -525,8 +524,7 @@ task.spawn(function()
         -------------------------------------------------------------------------
         -- BOSS LOGIC (SYNCED ROOM 15 & 20) -------------------------------------
         -------------------------------------------------------------------------
-        if isBoss then 
-            updateUI("Clear Boss Room " .. rNum, "Boss Battle")
+                    UpdateUI("Clear Boss Room " .. rNum, "Boss Battle")
             local f = workspace:FindFirstChild(EF)
             if f then 
                 local bossFightTimer = tick()
@@ -536,15 +534,19 @@ task.spawn(function()
                     local checkStillBoss, _ = iB()
                     if not checkStillBoss then 
                         _G.TargetMob = nil
-                        -- meyy bỏ reset phase 2 ở đây để có chết vẫn nhớ nhó (つㅅ･`)
                         break 
                     end
 
                     local priorityTarget = nil
                     local activeBoss = nil
                     local deadBoss = nil
+                    local isGasKnightAlive = false
 
                     for _, e in pairs(f:GetChildren()) do
+                        if e.Name == "Gas Knight" and Attack.Alive(e) then
+                            isGasKnightAlive = true
+                        end
+
                         if e.Name == PROP_NAME and Attack.Alive(e) then
                             priorityTarget = e
                         elseif e.Name ~= IE and e.Name ~= PROP_NAME then
@@ -553,7 +555,12 @@ task.spawn(function()
                     end
 
                     local targetBoss = activeBoss or deadBoss
-                    _G.TargetMob = priorityTarget or targetBoss 
+                    
+                    if isGasKnightAlive then
+                        _G.TargetMob = priorityTarget or targetBoss
+                    else
+                        _G.TargetMob = targetBoss
+                    end
 
                     -------------------------------------------------------------------------
                     -- RESET LOGIC (20S & ANYONE DIED) --------------------------------------
