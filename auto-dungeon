@@ -470,9 +470,7 @@ task.spawn(function()
                     -- MOVEMENT & PHASES (SYNCED ROOM 15 & 20) ------------------------------
                     -------------------------------------------------------------------------
 -- Xử lý trụ hồi máu cho cả 15 và 20 nè
-                    local isBossRoom, maxRoom = iB()
-                    local currentRoom = getCurrentRoomNumber()
-                    if isBossRoom and (currentRoom == maxRoom) and priorityTarget then
+                    if (rNum == 15 or rNum == 20) and priorityTarget then
                         _G.KillH = false
                         updateUI("Boss Healing Props", "Kill Aura OFF")
                         local h = gH(); local r = priorityTarget:FindFirstChild("HumanoidRootPart")
@@ -486,7 +484,7 @@ task.spawn(function()
                         if bHRP and mHRP and bHum then
                             local hpPercent = (bHum.Health / (bHum.MaxHealth > 0 and bHum.MaxHealth or 100)) * 100
                             
-                            -- Logic Phase 2
+                            -- Logic Phase 2 y hệt cho 15 và 20 nhó (｡◕‿◕｡)
                             if (rNum == 15 or rNum == 20) and activeBoss and not global_isPhaseTwo then
                                 if hpPercent < 37 then
                                     _G.SawBossLowHP = true 
@@ -504,7 +502,6 @@ task.spawn(function()
                             local targetPos
                             local combatOffset = (myRole == "Blox Fruit") and 3 or 25
                             
-                            -- Movement Target Calculation
                             if activeBoss then
                                 if (rNum == 15 or rNum == 20) then
                                     if global_isPhaseTwo and hpPercent <= 93 then
@@ -520,19 +517,11 @@ task.spawn(function()
                                 end
                             else
                                 _G.KillH = false
+                                -- Bay lên cao khi Boss chết nếu đang ở Phase 2 y hệt màn 15 nhó
                                 targetPos = ((rNum == 15 or rNum == 20) and global_isPhaseTwo and hpPercent <= 93) and bHRP.Position + Vector3.new(0, 700, 0) or bHRP.Position + Vector3.new(0, 100, 0)
                                 updateUI("Boss Dead", "Waiting Despawn")
                             end
-
-                            -- Sky Hop and Tween Logic
-                            local currentDist = (mHRP.Position - bHRP.Position).Magnitude
-                            local targetDist = (mHRP.Position - targetPos).Magnitude
-
-                            if targetDist > 100 or currentDist < (combatOffset * 0.5) then
-                                mHRP.CFrame = CFrame.new(targetPos)
-                            else
-                                TS:Create(mHRP, TweenInfo.new(0.15, Enum.EasingStyle.Linear), {CFrame = CFrame.new(targetPos)}):Play()
-                            end
+                            TS:Create(mHRP, TweenInfo.new(0.15, Enum.EasingStyle.Linear), {CFrame = CFrame.new(targetPos)}):Play()
                         end
                         task.wait(0.1)
                     else
@@ -542,7 +531,7 @@ task.spawn(function()
                     end
                 end
             end
-            task.wait(0.1)
+            task.wait(0.1) 
 
         ----------------------------------------------------------------
 else 
