@@ -304,53 +304,32 @@ local ValidTargets = {
     ["Zero"] = true,
     ["Gas Knight"] = true,
     ["Kitsune Lord"] = true,
-    ["Ancient Beast"] = true
+    ["Ancient Beast"] = true,
+    ["Raider"] = true
 }
 
 Attack.Alive = function(model)
-    if not model then return false end
+    if not model then return end
     local Humanoid = model:FindFirstChild("Humanoid")
     return Humanoid and Humanoid.Health > 0
-end
-
-local function isModelEmpty(model)
-    if not model or not model.Parent then return true end
-    return #model:GetChildren() == 0
 end
 
 task.spawn(function()
     while task.wait(Sec) do
         if _G.KillH and _G.TargetMob then
             local v = _G.TargetMob
-            
             if v and v.Parent and ValidTargets[v.Name] and Attack.Alive(v) then
                 pcall(function()
-                    if sethiddenproperty then 
-                        pcall(sethiddenproperty, game.Players.LocalPlayer, "SimulationRadius", math.huge) 
-                    end
-                    
+                    if sethiddenproperty then pcall(sethiddenproperty, game.Players.LocalPlayer, "SimulationRadius", math.huge) end
                     v:BreakJoints()
                     if v:FindFirstChild("Humanoid") then v.Humanoid.Health = 0 end
-                    if v:FindFirstChild("HumanoidRootPart") then 
-                        v.HumanoidRootPart.Size = Vector3.new(60, 60, 60) 
-                    end
+                    if v:FindFirstChild("HumanoidRootPart") then v.HumanoidRootPart.Size = Vector3.new(60, 60, 60) end
                     
-                    task.wait(0.1)
-                    
-                    if not isModelEmpty(v) then
-                        
-                        local hum = v:FindFirstChild("Humanoid")
-                        if hum and hum.Health <= 0 then
-                            
-                            if v.Name ~= "Gas Knight" then
-                                local Players = game:GetService("Players")
-                                local LocalPlayer = Players.LocalPlayer
-                                if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
-                                    LocalPlayer.Character.Humanoid.Health = 0
-                                end
-                            end
-                            
-                        end
+                    task.wait(0.1) 
+                    local Players = game:GetService("Players")
+                    local LocalPlayer = Players.LocalPlayer
+                    if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
+                        LocalPlayer.Character.Humanoid.Health = 0
                     end
                 end)
             end
