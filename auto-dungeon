@@ -616,23 +616,10 @@ task.spawn(function()
                     -------------------------------------------------------------------------
                     -- MOVEMENT & PHASES (SYNCED ROOM 15 & 20) ------------------------------
                     -------------------------------------------------------------------------
-                    local isBossRoom, maxRoom = iB()
+                                        local isBossRoom, maxRoom = iB()
                     local currentRoom = getCurrentRoomNumber()
-                    local canFightProp = false
                     
-                    if rNum == 15 and isBossRoom and (currentRoom == maxRoom) and priorityTarget then
-                        if activeBoss and Attack.Alive(activeBoss) then
-                            canFightProp = true
-                        end
-                    end
-
-                    if canFightProp then
-                        _G.KillH = false
-                        updateUI("Boss Healing Props", "Kill Aura OFF")
-                        local h = gH(); local r = priorityTarget:FindFirstChild("HumanoidRootPart")
-                        if h and r then h.CFrame = r.CFrame * CFrame.new(0, 0, 3) end
-                        task.wait(0.1)
-                    elseif targetBoss then
+                    if targetBoss then
                         local bHRP = targetBoss:FindFirstChild("HumanoidRootPart")
                         local bHum = targetBoss:FindFirstChild("Humanoid")
                         local mHRP = gH()
@@ -640,7 +627,6 @@ task.spawn(function()
                         if bHRP and mHRP and bHum then
                             local hpPercent = (bHum.Health / (bHum.MaxHealth > 0 and bHum.MaxHealth or 100)) * 100
                             
-                            -- Logic Phase 2
                             if (rNum == 15 or rNum == 20) and activeBoss and not global_isPhaseTwo then
                                 if hpPercent < 37 then
                                     _G.SawBossLowHP = true 
@@ -657,6 +643,7 @@ task.spawn(function()
 
                             local targetPos
                             local combatOffset = (myRole == "Blox Fruit") and 3 or 25
+
                             
                             -- Movement Target Calculation
                             if activeBoss then
