@@ -550,7 +550,7 @@ task.spawn(function()
                     -------------------------------------------------------------------------
                     -- RESET LOGIC (20S & ANYONE DIED) --------------------------------------
                     -------------------------------------------------------------------------
-                   local someoneDied = false
+                  local someoneDied = false
                     for _, pl in ipairs(P:GetPlayers()) do
                         local plChar = pl.Character
                         if plChar then
@@ -565,30 +565,32 @@ task.spawn(function()
                     if targetBoss then
                         local bHRP = targetBoss:FindFirstChild("HumanoidRootPart")
                         local mHRP = gH()
-                        local distToBoss = (bHRP and mHRP) and (mHRP.Position - bHRP.Position).Magnitude or math.huge
                         
-                        local canTriggerReset = false
+                        local yDistToBoss = (bHRP and mHRP) and (mHRP.Position.Y - bHRP.Position.Y) or 0
+                        
                         local forceResetNow = false
+                        local room15TimerUp = false
 
                         if rNum == 15 then
                             if global_isPhaseTwo then 
-                                canTriggerReset = true 
+                                -- Logic 20s reset chuan xac chi danh rieng cho man 15
+                                if (tick() - bossFightTimer > 20) then
+                                    room15TimerUp = true
+                                end
                             else 
                                 bossFightTimer = tick() 
                             end
                         elseif rNum == 20 then
                             if global_isPhaseTwo then
-                                canTriggerReset = true
-                                if distToBoss < 900 then forceResetNow = true end
+                                if yDistToBoss > 900 then forceResetNow = true end
                             else
                                 bossFightTimer = tick()
                             end
                         elseif rNum == 5 or rNum == 10 then
-                            canTriggerReset = true
-                            if distToBoss < 900 then forceResetNow = true end
+                            if yDistToBoss > 900 then forceResetNow = true end
                         end
                         
-                        if someoneDied or forceResetNow or (canTriggerReset and (tick() - bossFightTimer > 20)) then
+                        if someoneDied or forceResetNow or room15TimerUp then
                             if forceResetNow and not someoneDied then 
                                 task.wait(0.5) 
                             end
