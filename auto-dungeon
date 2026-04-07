@@ -304,32 +304,53 @@ local ValidTargets = {
     ["Zero"] = true,
     ["Gas Knight"] = true,
     ["Kitsune Lord"] = true,
-    ["Ancient Beast"] = true,
-    ["Raider"] = true
+    ["Ancient Beast"] = true
 }
 
 Attack.Alive = function(model)
-    if not model then return end
+    if not model then return false end
     local Humanoid = model:FindFirstChild("Humanoid")
     return Humanoid and Humanoid.Health > 0
+end
+
+local function isModelEmpty(model)
+    if not model or not model.Parent then return true end
+    return #model:GetChildren() == 0
 end
 
 task.spawn(function()
     while task.wait(Sec) do
         if _G.KillH and _G.TargetMob then
             local v = _G.TargetMob
+            
             if v and v.Parent and ValidTargets[v.Name] and Attack.Alive(v) then
                 pcall(function()
-                    if sethiddenproperty then pcall(sethiddenproperty, game.Players.LocalPlayer, "SimulationRadius", math.huge) end
+                    if sethiddenproperty then 
+                        pcall(sethiddenproperty, game.Players.LocalPlayer, "SimulationRadius", math.huge) 
+                    end
+                    
                     v:BreakJoints()
                     if v:FindFirstChild("Humanoid") then v.Humanoid.Health = 0 end
-                    if v:FindFirstChild("HumanoidRootPart") then v.HumanoidRootPart.Size = Vector3.new(60, 60, 60) end
+                    if v:FindFirstChild("HumanoidRootPart") then 
+                        v.HumanoidRootPart.Size = Vector3.new(60, 60, 60) 
+                    end
                     
-                    task.wait(0.1) 
-                    local Players = game:GetService("Players")
-                    local LocalPlayer = Players.LocalPlayer
-                    if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
-                        LocalPlayer.Character.Humanoid.Health = 0
+                    task.wait(0.1)
+                    
+                    if not isModelEmpty(v) then
+                        
+                        local hum = v:FindFirstChild("Humanoid")
+                        if hum and hum.Health <= 0 then
+                            
+                            if v.Name ~= "Gas Knight" then
+                                local Players = game:GetService("Players")
+                                local LocalPlayer = Players.LocalPlayer
+                                if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
+                                    LocalPlayer.Character.Humanoid.Health = 0
+                                end
+                            end
+                            
+                        end
                     end
                 end)
             end
@@ -470,7 +491,9 @@ task.spawn(function()
                     -- MOVEMENT & PHASES (SYNCED ROOM 15 & 20) ------------------------------
                     -------------------------------------------------------------------------
 -- Xử lý trụ hồi máu cho cả 15 và 20 nè
-                    if (rNum == 15 or rNum == 20) and priorityTarget then
+                    local isBossRoom, maxRoom = iB()
+                    local currentRoom = getCurrentRoomNumber()
+                    if isBossRoom and (currentRoom == maxRoom) and priorityTarget then
                         _G.KillH = false
                         updateUI("Boss Healing Props", "Kill Aura OFF")
                         local h = gH(); local r = priorityTarget:FindFirstChild("HumanoidRootPart")
@@ -484,7 +507,7 @@ task.spawn(function()
                         if bHRP and mHRP and bHum then
                             local hpPercent = (bHum.Health / (bHum.MaxHealth > 0 and bHum.MaxHealth or 100)) * 100
                             
-                            -- Logic Phase 2 y hệt cho 15 và 20 nhó (｡◕‿◕｡)
+                            -- Logic Phase 2
                             if (rNum == 15 or rNum == 20) and activeBoss and not global_isPhaseTwo then
                                 if hpPercent < 37 then
                                     _G.SawBossLowHP = true 
@@ -502,6 +525,7 @@ task.spawn(function()
                             local targetPos
                             local combatOffset = (myRole == "Blox Fruit") and 3 or 25
                             
+                            -- Movement Target Calculation
                             if activeBoss then
                                 if (rNum == 15 or rNum == 20) then
                                     if global_isPhaseTwo and hpPercent <= 93 then
@@ -517,11 +541,19 @@ task.spawn(function()
                                 end
                             else
                                 _G.KillH = false
-                                -- Bay lên cao khi Boss chết nếu đang ở Phase 2 y hệt màn 15 nhó
                                 targetPos = ((rNum == 15 or rNum == 20) and global_isPhaseTwo and hpPercent <= 93) and bHRP.Position + Vector3.new(0, 700, 0) or bHRP.Position + Vector3.new(0, 100, 0)
                                 updateUI("Boss Dead", "Waiting Despawn")
                             end
-                            TS:Create(mHRP, TweenInfo.new(0.15, Enum.EasingStyle.Linear), {CFrame = CFrame.new(targetPos)}):Play()
+
+                            -- Sky Hop and Tween Logic
+                            local currentDist = (mHRP.Position - bHRP.Position).Magnitude
+                            local targetDist = (mHRP.Position - targetPos).Magnitude
+
+                            if targetDist > 100 or currentDist < (combatOffset * 0.5) then
+                                mHRP.CFrame = CFrame.new(targetPos)
+                            else
+                                TS:Create(mHRP, TweenInfo.new(0.15, Enum.EasingStyle.Linear), {CFrame = CFrame.new(targetPos)}):Play()
+                            end
                         end
                         task.wait(0.1)
                     else
@@ -531,15 +563,23 @@ task.spawn(function()
                     end
                 end
             end
-            task.wait(0.1) 
+            task.wait(0.1)
 
         ----------------------------------------------------------------
 else 
             _G.KillH = false; _G.TargetMob = nil
             local f = workspace:FindFirstChild(EF); local h = gH()
             
-            if f and h then 
-                if myRole == "Melee" or myRole == "Sword" then
+if f and h then 
+    local toolInHand = p.Character and p.Character:FindFirstChildOfClass("Tool")
+    local currentHandToolTip = toolInHand and toolInHand.ToolTip or "None"
+
+    if _G.LastToolPrinted ~= currentHandToolTip then
+        print("ʚ₊˚meყყ˚₊ɞ - Hiện tại đang cầm: " .. currentHandToolTip)
+        _G.LastToolPrinted = currentHandToolTip
+    end
+
+    if currentHandToolTip == "Melee" or currentHandToolTip == "Sword" then
                     local i = {}
                     for _, e in pairs(f:GetChildren()) do 
                         if e.Name ~= IE then 
@@ -590,7 +630,7 @@ else
                         end 
                     else updateUI("Tween To Portal", "Clear") end
 
-                elseif myRole == "Blox Fruit" then
+                elseif currentHandToolTip == "Blox Fruit" then
                     local i = {}
                     for _, e in pairs(f:GetChildren()) do 
                         if e.Name ~= IE then 
@@ -633,7 +673,7 @@ else
                         end 
                     else updateUI("Tween To Portal", "Clear") end
 
-                elseif myRole == "Gun" then 
+                elseif currentHandToolTip == "Gun" then
                     _G.dragontorm = true
                     local i = {}
                     for _, e in pairs(f:GetChildren()) do 
