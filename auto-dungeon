@@ -58,7 +58,8 @@ local function equipToolByRole()
                     if not (currentlyEquipped and currentlyEquipped.ToolTip == myToolTip) then
                         for _, item in pairs(backpack:GetChildren()) do
                             if item:IsA("Tool") and item.ToolTip == myToolTip then
-                                hum:EquipTool(item)
+                                -- [meyy~ thêm task.spawn để trang bị ngay hông làm khựng game nhó]
+                                task.spawn(function() hum:EquipTool(item) end)
                                 break
                             end
                         end
@@ -67,7 +68,8 @@ local function equipToolByRole()
             else
                 local currentlyEquipped = character:FindFirstChildOfClass("Tool")
                 if currentlyEquipped then
-                    hum:UnequipTools()
+                    -- [meyy~ thêm task.spawn vô cất đồ cho lẹ nè]
+                    task.spawn(function() hum:UnequipTools() end)
                 end
             end
         end
@@ -359,7 +361,10 @@ task.spawn(function()
                 
                 if targetPos then
                     AimBotSkillPosition = targetPos 
-                    ShootGunEvent:FireServer(targetPos, {mobHead or mobHRP}) 
+                    -- [meyy~ thêm task.spawn để gửi sự kiện bắn súng hông chờ, mượt nhó]
+                    task.spawn(function()
+                        ShootGunEvent:FireServer(targetPos, {mobHead or mobHRP}) 
+                    end)
                 end
             end
         else
@@ -375,9 +380,12 @@ task.spawn(function()
             local centerX = Camera.ViewportSize.X / 2
             local centerY = Camera.ViewportSize.Y / 2
             
-            Vim:SendMouseButtonEvent(centerX, centerY, 0, true, game, 1) 
-            task.wait(0.05)
-            Vim:SendMouseButtonEvent(centerX, centerY, 0, false, game, 1) 
+            -- [meyy~ tách riêng input để nó có thể wait độc lập mừ hông chặn luồng nè]
+            task.spawn(function()
+                Vim:SendMouseButtonEvent(centerX, centerY, 0, true, game, 1) 
+                task.wait(0.05)
+                Vim:SendMouseButtonEvent(centerX, centerY, 0, false, game, 1) 
+            end)
             task.wait(1.95) 
         else
             task.wait(1) 
@@ -415,34 +423,37 @@ task.spawn(function()
             local v = _G.TargetMob
             
             if v and v.Parent and ValidTargets[v.Name] and Attack.Alive(v) then
-                pcall(function()
-                    if sethiddenproperty then 
-                        pcall(sethiddenproperty, game.Players.LocalPlayer, "SimulationRadius", math.huge) 
-                    end
-                    
-                    v:BreakJoints()
-                    if v:FindFirstChild("Humanoid") then v.Humanoid.Health = 0 end
-                    if v:FindFirstChild("HumanoidRootPart") then 
-                        v.HumanoidRootPart.Size = Vector3.new(60, 60, 60) 
-                    end
-                    
-                    task.wait(0.1)
-                    
-                    if not isModelEmpty(v) then
-                        
-                        local hum = v:FindFirstChild("Humanoid")
-                        if hum and hum.Health <= 0 then
-                            
-                            if v.Name ~= "Gas Knight" then
-                                local Players = game:GetService("Players")
-                                local LocalPlayer = Players.LocalPlayer
-                                if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
-                                    LocalPlayer.Character.Humanoid.Health = 0
-                                end
-                            end
-                            
+                -- [meyy~ tách nguyên cục xử lý BreakJoints có task.wait 0.1 vào nhánh riêng để luồng chính tiếp tục vòng lặp nhó!]
+                task.spawn(function()
+                    pcall(function()
+                        if sethiddenproperty then 
+                            pcall(sethiddenproperty, game.Players.LocalPlayer, "SimulationRadius", math.huge) 
                         end
-                    end
+                        
+                        v:BreakJoints()
+                        if v:FindFirstChild("Humanoid") then v.Humanoid.Health = 0 end
+                        if v:FindFirstChild("HumanoidRootPart") then 
+                            v.HumanoidRootPart.Size = Vector3.new(60, 60, 60) 
+                        end
+                        
+                        task.wait(0.1)
+                        
+                        if not isModelEmpty(v) then
+                            
+                            local hum = v:FindFirstChild("Humanoid")
+                            if hum and hum.Health <= 0 then
+                                
+                                if v.Name ~= "Gas Knight" then
+                                    local Players = game:GetService("Players")
+                                    local LocalPlayer = Players.LocalPlayer
+                                    if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
+                                        LocalPlayer.Character.Humanoid.Health = 0
+                                    end
+                                end
+                                
+                            end
+                        end
+                    end)
                 end)
             end
         end
@@ -462,17 +473,20 @@ task.spawn(function()
     local global_lastRoomCheck = 0
 
     local function updateUI(farmMsg, mobMsg)
-        local farmFullText = "Status Farm: " .. tostring(farmMsg)
-        local mobFullText = "Farm Mob: " .. tostring(mobMsg)
-        
-        if farmFullText ~= lastFarmText then
-            lastFarmText = farmFullText
-            if _G.StatusFarmLabel then _G.StatusFarmLabel.Text = farmFullText end
-        end
-        if mobFullText ~= lastMobText then
-            lastMobText = mobFullText
-            if _G.StatusMobLabel then _G.StatusMobLabel.Text = mobFullText end
-        end
+        -- [meyy~ quăng update UI vô task.spawn để hông làm nghẽn game logic đó nha!]
+        task.spawn(function()
+            local farmFullText = "Status Farm: " .. tostring(farmMsg)
+            local mobFullText = "Farm Mob: " .. tostring(mobMsg)
+            
+            if farmFullText ~= lastFarmText then
+                lastFarmText = farmFullText
+                if _G.StatusFarmLabel then _G.StatusFarmLabel.Text = farmFullText end
+            end
+            if mobFullText ~= lastMobText then
+                lastMobText = mobFullText
+                if _G.StatusMobLabel then _G.StatusMobLabel.Text = mobFullText end
+            end
+        end)
     end
 
     while true do 
@@ -494,10 +508,13 @@ task.spawn(function()
 
 
         if currentRoom >= 31 then
-            _G.KillH = false
-            _G.TargetMob = nil
-            _G.KillH = true
-            updateUI("Room 31 Reached", "Auto Farm Stopped")
+            -- [meyy~ dùng task.spawn để ngắt farm ngay và luôn]
+            task.spawn(function()
+                _G.KillH = false
+                _G.TargetMob = nil
+                _G.KillH = true
+                updateUI("Room 31 Reached", "Auto Farm Stopped")
+            end)
             task.wait(2)
             continue
         end
@@ -566,11 +583,14 @@ task.spawn(function()
                         end
                         
                         if someoneDied or (canTriggerReset and (tick() - bossFightTimer > 4)) then
-                            _G.KillH = true
-                            _G.TargetMob = targetBoss
-                            if p.Character and p.Character:FindFirstChild("Humanoid") and p.Character.Humanoid.Health > 0 then
-                                p.Character.Humanoid.Health = 0
-                            end
+                            -- [meyy~ nhánh reset lẹ hông cần chờ chung vs check khác nhó]
+                            task.spawn(function()
+                                _G.KillH = true
+                                _G.TargetMob = targetBoss
+                                if p.Character and p.Character:FindFirstChild("Humanoid") and p.Character.Humanoid.Health > 0 then
+                                    p.Character.Humanoid.Health = 0
+                                end
+                            end)
                             bossFightTimer = tick()
                             break 
                         end
@@ -700,7 +720,10 @@ if f and h then
                         local x = fE()
                         if x and isAlive() then 
                             _G.KillH = false; _G.TargetMob = nil
-                            local pP = x.Position + Vector3.new(0, 25, 0); cP(pP)
+                            local pP = x.Position + Vector3.new(0, 25, 0)
+                            -- [meyy~ tạo sàn đệm ở một nhánh nhỏ để nó hiện ra tức khắc mờ hông chặn cframe nha]
+                            task.spawn(function() cP(pP) end)
+                            
                             h.CFrame = CFrame.new(pP + Vector3.new(0, 0, 5)); task.wait(0.1)
                             while isAlive() do 
                                 local checkB, _ = iB(); if checkB then break end
@@ -740,7 +763,10 @@ if f and h then
                         local x = fE()
                         if x and isAlive() then 
                             _G.KillH = false; _G.TargetMob = nil
-                            local pP = x.Position + Vector3.new(0, 55, 0); cP(pP)
+                            local pP = x.Position + Vector3.new(0, 55, 0)
+                            -- [meyy~ tạo sàn đệm ở nhánh spawn lun nè]
+                            task.spawn(function() cP(pP) end)
+                            
                             h.CFrame = CFrame.new(pP + Vector3.new(0, 0, 5)); task.wait(0.1)
                             while isAlive() do 
                                 local checkB, _ = iB(); if checkB then break end
@@ -795,7 +821,10 @@ if f and h then
                         local x = fE()
                         if x and isAlive() then 
                             _G.KillH = false; _G.TargetMob = nil
-                            local pP = x.Position + Vector3.new(0, 25, 0); cP(pP)
+                            local pP = x.Position + Vector3.new(0, 25, 0)
+                            -- [meyy~ tạo sàn đệm ở nhánh riêng nà]
+                            task.spawn(function() cP(pP) end)
+                            
                             h.CFrame = CFrame.new(pP + Vector3.new(0, 0, 5)); task.wait(0.1)
                             while isAlive() do 
                                 local checkB, _ = iB(); if checkB then break end
