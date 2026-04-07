@@ -238,19 +238,40 @@ end
 local function sM() mT = mT + 1 end
 
 local function flyToNearestExit(targetPos)
-    sM(); local myToken = mT; local hrp = gH(); local startPos = hrp.Position
-    local delta = targetPos - startPos; local distance = delta.Magnitude
-    if distance < 3 then return end 
-    local direction = delta.Unit; local duration = distance / FLY_SPEED; local elapsed = 0
+    sM()
+    local myToken = mT
+    local hrp = gH()
+    local startPos = hrp.Position
+    local delta = targetPos - startPos
+    local distance = delta.Magnitude
+    
+    if distance < 3 then 
+        task.wait(0.5)
+        return 
+    end 
+    
+    local direction = delta.Unit
+    local duration = distance / FLY_SPEED
+    local elapsed = 0
     local connection
+    
     connection = R.Heartbeat:Connect(function(dt)
-        if myToken ~= mT then connection:Disconnect() return end
+        if myToken ~= mT then 
+            connection:Disconnect() 
+            return 
+        end
         elapsed += dt
         local alpha = math.clamp(elapsed / duration, 0, 1)
         hrp.CFrame = CFrame.new(startPos + direction * (distance * alpha))
-        if alpha >= 1 then connection:Disconnect() end
+        if alpha >= 1 then 
+            connection:Disconnect() 
+        end
     end)
+    
     repeat task.wait() until elapsed >= duration or myToken ~= mT
+        if myToken == mT then
+        task.wait(0.5)
+    end
 end
 
 local function executeFlyToNearestExit()
@@ -407,53 +428,21 @@ local ValidTargets = {
 }
 
 Attack.Alive = function(model)
-    if not model then return false end
+    if not model then return end
     local Humanoid = model:FindFirstChild("Humanoid")
     return Humanoid and Humanoid.Health > 0
-end
-
-local function isModelEmpty(model)
-    if not model or not model.Parent then return true end
-    return #model:GetChildren() == 0
 end
 
 task.spawn(function()
     while task.wait(Sec) do
         if _G.KillH and _G.TargetMob then
             local v = _G.TargetMob
-            
             if v and v.Parent and ValidTargets[v.Name] and Attack.Alive(v) then
-                -- [meyy~ tách nguyên cục xử lý BreakJoints có task.wait 0.1 vào nhánh riêng để luồng chính tiếp tục vòng lặp nhó!]
-                task.spawn(function()
-                    pcall(function()
-                        if sethiddenproperty then 
-                            pcall(sethiddenproperty, game.Players.LocalPlayer, "SimulationRadius", math.huge) 
-                        end
-                        
-                        v:BreakJoints()
-                        if v:FindFirstChild("Humanoid") then v.Humanoid.Health = 0 end
-                        if v:FindFirstChild("HumanoidRootPart") then 
-                            v.HumanoidRootPart.Size = Vector3.new(60, 60, 60) 
-                        end
-                        
-                        task.wait(0.1)
-                        
-                        if not isModelEmpty(v) then
-                            
-                            local hum = v:FindFirstChild("Humanoid")
-                            if hum and hum.Health <= 0 then
-                                
-                                if v.Name ~= "Gas Knight" then
-                                    local Players = game:GetService("Players")
-                                    local LocalPlayer = Players.LocalPlayer
-                                    if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
-                                        LocalPlayer.Character.Humanoid.Health = 0
-                                    end
-                                end
-                                
-                            end
-                        end
-                    end)
+                pcall(function()
+                    if sethiddenproperty then pcall(sethiddenproperty, p, "SimulationRadius", math.huge) end
+                    v:BreakJoints()
+                    if v:FindFirstChild("Humanoid") then v.Humanoid.Health = 0 end
+                    if v:FindFirstChild("HumanoidRootPart") then v.HumanoidRootPart.Size = Vector3.new(60, 60, 60) end
                 end)
             end
         end
@@ -561,7 +550,7 @@ task.spawn(function()
                     -------------------------------------------------------------------------
                     -- RESET LOGIC (20S & ANYONE DIED) --------------------------------------
                     -------------------------------------------------------------------------
-                    local someoneDied = false
+                   local someoneDied = false
                     for _, pl in ipairs(P:GetPlayers()) do
                         local plChar = pl.Character
                         if plChar then
@@ -574,16 +563,36 @@ task.spawn(function()
                     end
 
                     if targetBoss then
+                        local bHRP = targetBoss:FindFirstChild("HumanoidRootPart")
+                        local mHRP = gH()
+                        local distToBoss = (bHRP and mHRP) and (mHRP.Position - bHRP.Position).Magnitude or math.huge
+                        
                         local canTriggerReset = false
-                        -- Á~ Màn 20 giờ cũng chỉ reset khi đã vào Phase 2 y hệt màn 15 nhó
-                        if rNum == 15 or rNum == 20 then
-                            if global_isPhaseTwo then canTriggerReset = true else bossFightTimer = tick() end
+                        local forceResetNow = false
+
+                        if rNum == 15 then
+                            if global_isPhaseTwo then 
+                                canTriggerReset = true 
+                            else 
+                                bossFightTimer = tick() 
+                            end
+                        elseif rNum == 20 then
+                            if global_isPhaseTwo then
+                                canTriggerReset = true
+                                if distToBoss < 900 then forceResetNow = true end
+                            else
+                                bossFightTimer = tick()
+                            end
                         elseif rNum == 5 or rNum == 10 then
-                            canTriggerReset = true 
+                            canTriggerReset = true
+                            if distToBoss < 900 then forceResetNow = true end
                         end
                         
-                        if someoneDied or (canTriggerReset and (tick() - bossFightTimer > 4)) then
-                            -- [meyy~ nhánh reset lẹ hông cần chờ chung vs check khác nhó]
+                        if someoneDied or forceResetNow or (canTriggerReset and (tick() - bossFightTimer > 20)) then
+                            if forceResetNow and not someoneDied then 
+                                task.wait(0.5) 
+                            end
+
                             task.spawn(function()
                                 _G.KillH = true
                                 _G.TargetMob = targetBoss
@@ -592,19 +601,25 @@ task.spawn(function()
                                 end
                             end)
                             bossFightTimer = tick()
-                            break 
+                            break
                         end
                     else
                         bossFightTimer = tick()
                     end
-
                     -------------------------------------------------------------------------
                     -- MOVEMENT & PHASES (SYNCED ROOM 15 & 20) ------------------------------
                     -------------------------------------------------------------------------
--- Xử lý trụ hồi máu cho cả 15 và 20 nè
                     local isBossRoom, maxRoom = iB()
                     local currentRoom = getCurrentRoomNumber()
-                    if isBossRoom and (currentRoom == maxRoom) and priorityTarget then
+                    local canFightProp = false
+                    
+                    if rNum == 15 and isBossRoom and (currentRoom == maxRoom) and priorityTarget then
+                        if activeBoss and Attack.Alive(activeBoss) then
+                            canFightProp = true
+                        end
+                    end
+
+                    if canFightProp then
                         _G.KillH = false
                         updateUI("Boss Healing Props", "Kill Aura OFF")
                         local h = gH(); local r = priorityTarget:FindFirstChild("HumanoidRootPart")
@@ -721,7 +736,6 @@ if f and h then
                         if x and isAlive() then 
                             _G.KillH = false; _G.TargetMob = nil
                             local pP = x.Position + Vector3.new(0, 25, 0)
-                            -- [meyy~ tạo sàn đệm ở một nhánh nhỏ để nó hiện ra tức khắc mờ hông chặn cframe nha]
                             task.spawn(function() cP(pP) end)
                             
                             h.CFrame = CFrame.new(pP + Vector3.new(0, 0, 5)); task.wait(0.1)
