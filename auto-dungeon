@@ -558,7 +558,7 @@ task.spawn(function()
                     -------------------------------------------------------------------------
                     -- RESET LOGIC (20S & ANYONE DIED) --------------------------------------
                     -------------------------------------------------------------------------
-                  local someoneDied = false
+  local someoneDied = false
                     for _, pl in ipairs(P:GetPlayers()) do
                         local plChar = pl.Character
                         if plChar then
@@ -571,36 +571,33 @@ task.spawn(function()
                     end
 
                     if targetBoss then
-                        local bHRP = targetBoss:FindFirstChild("HumanoidRootPart")
-                        local mHRP = gH()
-                        
-                        local yDistToBoss = (bHRP and mHRP) and (mHRP.Position.Y - bHRP.Position.Y) or 0
-                        
-                        local forceResetNow = false
-                        local room15TimerUp = false
+                        local shouldReset = false
+                        local waitTime = 0
 
                         if rNum == 15 then
-                            if global_isPhaseTwo then 
-                                -- Logic 20s reset chuan xac chi danh rieng cho man 15
-                                if (tick() - bossFightTimer > 20) then
-                                    room15TimerUp = true
-                                end
-                            else 
-                                bossFightTimer = tick() 
+                            -- Man 15: Doi du 20s trong Phase 2
+                            if global_isPhaseTwo and (tick() - bossFightTimer > 20) then
+                                shouldReset = true
+                            elseif not global_isPhaseTwo then
+                                bossFightTimer = tick()
                             end
                         elseif rNum == 20 then
+                            -- Man 20: Phai la Phase 2 moi cho 1.25s
                             if global_isPhaseTwo then
-                                if yDistToBoss > 900 then forceResetNow = true end
+                                shouldReset = true
+                                waitTime = 1.25
                             else
                                 bossFightTimer = tick()
                             end
                         elseif rNum == 5 or rNum == 10 then
-                            if yDistToBoss > 900 then forceResetNow = true end
+                            -- Man 5 va 10: Cho luon 1.25s hông can dieu kien
+                            shouldReset = true
+                            waitTime = 1.25
                         end
-                        
-                        if someoneDied or forceResetNow or room15TimerUp then
-                            if forceResetNow and not someoneDied then 
-                                task.wait(0.5) 
+
+                        if someoneDied or shouldReset then
+                            if shouldReset and not someoneDied and waitTime > 0 then
+                                task.wait(waitTime)
                             end
 
                             task.spawn(function()
