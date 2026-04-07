@@ -292,7 +292,98 @@ end
 -------------------------------------------------------------------------
 -- [SECTION: COMBAT LOGIC] ----------------------------------------------
 -------------------------------------------------------------------------
+_G.dragontorm = false 
+local AimBotSkillPosition = nil 
 
+pcall(function()
+    local gg = getrawmetatable(game);
+    local old = gg.__namecall;
+    setreadonly(gg, false);
+
+    gg.__namecall = newcclosure(function(self, ...)
+        local method = getnamecallmethod();
+        local args = { ... }
+        
+        if _G.dragontorm and tostring(method) == "FireServer" and tostring(self) == "ShootGunEvent" then
+            if AimBotSkillPosition then
+                args[1] = AimBotSkillPosition 
+                return old(self, unpack(args))
+            end
+        end
+        return old(self, ...)
+    end);
+end)
+
+local Players = game:GetService("Players")
+local Workspace = game:GetService("Workspace")
+local Vim = game:GetService("VirtualInputManager") 
+local LocalPlayer = Players.LocalPlayer
+local Camera = Workspace.CurrentCamera
+
+local NetModule = nil
+pcall(function()
+    NetModule = require(game.ReplicatedStorage.Modules.Net) 
+end)
+
+local ShootGunEvent = NetModule and NetModule:RemoteEvent("ShootGunEvent") 
+local MAX_TARGET_DISTANCE = 500
+
+local function FindNearestMob()
+    local targetMob = nil
+    local minDistance = math.huge
+    local playerHRP = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") 
+    if not playerHRP then return nil end
+    
+    local MobContainer = Workspace:FindFirstChild("Enemies") or Workspace 
+    for _, v in pairs(MobContainer:GetChildren()) do
+        local humanoid = v:FindFirstChild("Humanoid")
+        if v and humanoid and v:FindFirstChild("HumanoidRootPart") and humanoid.Health > 0 then
+            local dis = (playerHRP.Position - v.HumanoidRootPart.Position).Magnitude
+            if dis <= MAX_TARGET_DISTANCE and dis < minDistance then
+                minDistance = dis 
+                targetMob = v
+            end
+        end
+    end
+    return targetMob
+end
+
+task.spawn(function()
+    while true do
+        if _G.dragontorm then
+            local targetMob = FindNearestMob()
+            if targetMob and ShootGunEvent then
+                local mobHRP = targetMob:FindFirstChild("HumanoidRootPart") 
+                local mobHead = targetMob:FindFirstChild("Head") 
+                local targetPos = (mobHead and mobHead.Position) or (mobHRP and mobHRP.Position) 
+                
+                if targetPos then
+                    AimBotSkillPosition = targetPos 
+                    ShootGunEvent:FireServer(targetPos, {mobHead or mobHRP}) 
+                end
+            end
+        else
+            AimBotSkillPosition = nil 
+        end
+        task.wait(0.1)
+    end
+end)
+
+task.spawn(function()
+    while true do
+        if _G.dragontorm then
+            local centerX = Camera.ViewportSize.X / 2
+            local centerY = Camera.ViewportSize.Y / 2
+            
+            Vim:SendMouseButtonEvent(centerX, centerY, 0, true, game, 1) 
+            task.wait(0.05)
+            Vim:SendMouseButtonEvent(centerX, centerY, 0, false, game, 1) 
+            task.wait(1.95) 
+        else
+            task.wait(1) 
+        end
+    end
+end)
 ---------------------------------------------------------------------------
 _G.KillH = false 
 _G.TargetMob = nil 
