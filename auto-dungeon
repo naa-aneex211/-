@@ -1,3 +1,4 @@
+
 if _G.AnnScriptLoaded then return end
 _G.AnnScriptLoaded = true
 
@@ -587,7 +588,7 @@ task.spawn(function()
 
                         if someoneDied or shouldReset then
                             if shouldReset and not someoneDied and waitTime > 0 then
-                                task.wait(waitTime)
+                                task.wait(0)
                             end
 
                             task.spawn(function()
