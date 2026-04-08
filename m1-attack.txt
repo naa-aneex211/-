@@ -1,17 +1,4 @@
-getgenv().Config = {
-    ["Account Join"] = { 
-        Users = {
-        "",
-        "naa_kawaiix3"
-    }, 
-        ToolTip = "Blox Fruit" 
-    }, 
-    ["Account Join Raid"] = { 
-        Users = {"naa_kawaiix4"}, 
-        ToolTip = "Blox Fruit" 
-    }, 
-    ["Select Difficulty"] = "Normal"  -- "Hard" , ... 
-}
+
 if _G.AnnScriptLoaded then return end
 _G.AnnScriptLoaded = true
 
