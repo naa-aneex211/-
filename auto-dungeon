@@ -508,7 +508,7 @@ task.spawn(function()
             executeFlyToNearestExit(); task.wait(0.1); continue 
         end
 
-        if tick() - global_roomEntryTime < 1 then
+        if tick() - global_roomEntryTime < 0.4 then
             _G.TargetMob = nil
             task.wait(0.1)
             continue
