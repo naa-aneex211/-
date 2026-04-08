@@ -191,7 +191,7 @@ local function GatherAtLeader()
     local totalRequired = 0
     for _ in pairs(allowedUsers) do totalRequired = totalRequired + 1 end
 
-    local CorrectedWaitingSpot = Vector3.new(-360, 432, -355) 
+    local CorrectedWaitingSpot = Vector3.new(-360, 332, -355) 
 
     _G.SetFarmStatus("Status: Gathering...")
 
