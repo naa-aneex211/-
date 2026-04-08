@@ -449,6 +449,7 @@ end)
 -------------------------------------------------------------------------
 
 task.spawn(function()
+    -- [[ INITIALIZE GLOBAL VARIABLES ]]
     local lastFarmText = ""
     local lastMobText = ""
     
@@ -458,8 +459,8 @@ task.spawn(function()
     local global_lastRoomCheck = 0
     local global_roomEntryTime = 0 
 
+    -- [[ UI UPDATE FUNCTION ]]
     local function updateUI(farmMsg, mobMsg)
-        -- [meyy~ quăng update UI vô task.spawn để hông làm nghẽn game logic đó nha!]
         task.spawn(function()
             local farmFullText = "Status Farm: " .. tostring(farmMsg)
             local mobFullText = "Farm Mob: " .. tostring(mobMsg)
@@ -475,12 +476,15 @@ task.spawn(function()
         end)
     end
 
+    -- [[ MAIN FARM LOOP ]]
     while true do 
-
+        task.wait() -- Anti-crash
+        
         local isBoss, rNum = iB()
         local currentRoom = getCurrentRoomNumber()
         local myRole = getCurrentToolTip()
         
+        -- Reset state on new room
         if currentRoom > 0 and currentRoom ~= global_lastRoomCheck then
             global_lastRoomCheck = currentRoom
             global_isPhaseTwo = false
@@ -492,6 +496,7 @@ task.spawn(function()
             global_roomEntryTime = tick() 
         end
     
+        -- Room 31 limit
         if currentRoom >= 31 then
             task.spawn(function()
                 _G.KillH = false
@@ -503,12 +508,16 @@ task.spawn(function()
             continue
         end
         
+        -- Moving to portal
         if currentRoom > 0 and currentRoom < rNum then
             _G.TargetMob = nil
             updateUI("Tween To Portal " .. rNum, "Moving")
-            executeFlyToNearestExit(); task.wait(0.1); continue 
+            executeFlyToNearestExit()
+            task.wait(0.1)
+            continue 
         end
 
+        -- Entry delay
         if tick() - global_roomEntryTime < 0.4 then
             _G.TargetMob = nil
             task.wait(0.1)
@@ -516,7 +525,7 @@ task.spawn(function()
         end
 
         -------------------------------------------------------------------------
-        -- BOSS LOGIC (SYNCED ROOM 15 & 20) -------------------------------------
+        -- SECTION: BOSS LOGIC (ROOM 15 & 20 SYNC)
         -------------------------------------------------------------------------
         if isBoss then 
             updateUI("Clear Boss Room " .. rNum, "Boss Battle")
@@ -549,9 +558,7 @@ task.spawn(function()
                     local targetBoss = activeBoss or deadBoss
                     _G.TargetMob = priorityTarget or targetBoss 
 
-                    -------------------------------------------------------------------------
-                    -- RESET LOGIC (20S & ANYONE DIED) --------------------------------------
-                    -------------------------------------------------------------------------
+                    -- Check if anyone died
                     local someoneDied = false
                     for _, pl in ipairs(P:GetPlayers()) do
                         local plChar = pl.Character
@@ -588,7 +595,7 @@ task.spawn(function()
 
                         if someoneDied or shouldReset then
                             if shouldReset and not someoneDied and waitTime > 0 then
-                                task.wait(0)
+                                task.wait(waitTime)
                             end
 
                             task.spawn(function()
@@ -604,11 +611,9 @@ task.spawn(function()
                     else
                         bossFightTimer = tick()
                     end
-                    -------------------------------------------------------------------------
-                    -- MOVEMENT & PHASES (SYNCED ROOM 15 & 20) ------------------------------
-                    -------------------------------------------------------------------------
+
+                    -- Movement and Phases
                     local isBossRoom, maxRoom = iB()
-                    local currentRoom = getCurrentRoomNumber()
                     local canFightProp = false
                     
                     if rNum == 20 and isBossRoom and (currentRoom == maxRoom) and priorityTarget then
@@ -620,7 +625,8 @@ task.spawn(function()
                     if canFightProp then
                         _G.KillH = false
                         updateUI("Boss Healing Props", "Kill Aura OFF")
-                        local h = gH(); local r = priorityTarget:FindFirstChild("HumanoidRootPart")
+                        local h = gH()
+                        local r = priorityTarget:FindFirstChild("HumanoidRootPart")
                         if h and r then h.CFrame = r.CFrame * CFrame.new(0, 0, 3) end
                         task.wait(0.1)
                     elseif targetBoss then
@@ -631,7 +637,7 @@ task.spawn(function()
                         if bHRP and mHRP and bHum then
                             local hpPercent = (bHum.Health / (bHum.MaxHealth > 0 and bHum.MaxHealth or 100)) * 100
                             
-                            -- Logic Phase 2
+                            -- Phase 2 Detection Logic
                             if (rNum == 15 or rNum == 20) and activeBoss and not global_isPhaseTwo then
                                 if hpPercent < 37 then
                                     _G.SawBossLowHP = true 
@@ -640,7 +646,8 @@ task.spawn(function()
                                     global_isPhaseTwo = true
                                 end
                                 if not global_waitingForPhase2 and hpPercent < 37 then
-                                    global_waitingForPhase2 = true; global_phase2Timer = tick() + 4
+                                    global_waitingForPhase2 = true
+                                    global_phase2Timer = tick() + 4
                                 elseif global_waitingForPhase2 and tick() >= global_phase2Timer then 
                                     global_isPhaseTwo = true 
                                 end
@@ -649,18 +656,20 @@ task.spawn(function()
                             local targetPos
                             local combatOffset = (myRole == "Blox Fruit") and 3 or 25 
 
-                            
                             if activeBoss then
                                 if (rNum == 15 or rNum == 20) then
                                     if global_isPhaseTwo and hpPercent <= 93 then
-                                        _G.KillH = true; targetPos = bHRP.Position + Vector3.new(0, 200, 0)
+                                        _G.KillH = true
+                                        targetPos = bHRP.Position + Vector3.new(0, 200, 0)
                                         updateUI("Boss Phase 2 - Low HP", "Safe Mode 200 Studs")
                                     else
-                                        _G.KillH = false; targetPos = bHRP.Position + Vector3.new(0, combatOffset, 0)
+                                        _G.KillH = false
+                                        targetPos = bHRP.Position + Vector3.new(0, combatOffset, 0)
                                         updateUI(global_waitingForPhase2 and not global_isPhaseTwo and "Phase 1 Wait Phase 2" or "Phase 2 Active", "Close Combat")
                                     end
                                 else
-                                    _G.KillH = true; targetPos = bHRP.Position + Vector3.new(0, 400, 0)
+                                    _G.KillH = true
+                                    targetPos = bHRP.Position + Vector3.new(0, 400, 0)
                                     updateUI("Boss Room " .. rNum, "Standard Farm")
                                 end
                             else
@@ -680,7 +689,8 @@ task.spawn(function()
                         end
                         task.wait(0.1)
                     else
-                        _G.KillH = false; _G.TargetMob = nil
+                        _G.KillH = false
+                        _G.TargetMob = nil
                         if fE() then break end
                         task.wait(0.1)
                     end
@@ -688,25 +698,31 @@ task.spawn(function()
             end
             task.wait(0.1)
 
-        ----------------------------------------------------------------
+        -------------------------------------------------------------------------
+        -- SECTION: MOB LOGIC (NORMAL ROOMS)
+        -------------------------------------------------------------------------
         else 
-            _G.KillH = false; _G.TargetMob = nil
-            local f = workspace:FindFirstChild(EF); local h = gH()
+            _G.KillH = false
+            _G.TargetMob = nil
+            local f = workspace:FindFirstChild(EF)
+            local h = gH()
             
             if f and h then 
                 local toolInHand = p.Character and p.Character:FindFirstChildOfClass("Tool")
                 local currentHandToolTip = toolInHand and toolInHand.ToolTip or "None"
 
                 if _G.LastToolPrinted ~= currentHandToolTip then
-                    print("ʚ₊˚meყყ˚₊ɞ - Hiện tại đang cầm: " .. currentHandToolTip)
+                    print("Current Tool: " .. currentHandToolTip)
                     _G.LastToolPrinted = currentHandToolTip
                 end
 
+                -- [[ MELEE & SWORD SECTION ]]
                 if currentHandToolTip == "Melee" or currentHandToolTip == "Sword" then
                     local i = {}
                     for _, e in pairs(f:GetChildren()) do 
                         if e.Name ~= IE then 
-                            local hrpE = e:FindFirstChild("HumanoidRootPart"); local humE = e:FindFirstChild("Humanoid")
+                            local hrpE = e:FindFirstChild("HumanoidRootPart")
+                            local humE = e:FindFirstChild("Humanoid")
                             if hrpE and humE and humE.Health > 0 then table.insert(i, e) end 
                         end 
                     end
@@ -721,91 +737,154 @@ task.spawn(function()
                                 _G.TargetMob = e; _G.KillH = true 
                                 local targetCF = hrpE.CFrame * CFrame.new(0, 25, 0)
                                 local tween = TS:Create(h, TweenInfo.new(0.3, Enum.EasingStyle.Linear), {CFrame = targetCF})
-                                tween:Play(); tween.Completed:Wait()
+                                tween:Play()
+                                tween.Completed:Wait()
                                 repeat 
                                     if not isAlive() then break end
-                                    _G.TargetMob = e; h.CFrame = hrpE.CFrame * CFrame.new(0, 25, 0); task.wait(0.1)
+                                    _G.TargetMob = e
+                                    h.CFrame = hrpE.CFrame * CFrame.new(0, 25, 0)
+                                    task.wait(0.1)
                                 until not e.Parent or not (humE and humE.Health > 0)
                                 _G.TargetMob = nil; _G.KillH = false
                             end
                         end
+                        
                         local x = fE()
                         if x and isAlive() then 
                             _G.KillH = false; _G.TargetMob = nil
                             local pP = x.Position + Vector3.new(0, 25, 0)
                             task.spawn(function() cP(pP) end)
                             
-                            h.CFrame = CFrame.new(pP + Vector3.new(0, 0, 5)); task.wait(0.1)
+                            h.CFrame = CFrame.new(pP + Vector3.new(0, 0, 5))
+                            task.wait(0.1)
                             while isAlive() do 
                                 local checkB, _ = iB(); if checkB then break end
-                                local enemiesAlive = 0; local nextTarget = nil
+                                local enemiesAlive = 0
+                                local nextTarget = nil
                                 for _, e in pairs(f:GetChildren()) do 
                                     if e.Name ~= IE then 
-                                        local hrpE = e:FindFirstChild("HumanoidRootPart"); local humE = e:FindFirstChild("Humanoid")
-                                        if hrpE and humE and humE.Health > 0 then enemiesAlive += 1; if not nextTarget then nextTarget = e end end 
+                                        local hrpE = e:FindFirstChild("HumanoidRootPart")
+                                        local humE = e:FindFirstChild("Humanoid")
+                                        if hrpE and humE and humE.Health > 0 then 
+                                            enemiesAlive += 1
+                                            if not nextTarget then nextTarget = e end 
+                                        end 
                                     end 
                                 end
                                 if enemiesAlive == 0 then updateUI("Tween To Portal", "Clear") break end
                                 if nextTarget then
                                     local hrpE = nextTarget:FindFirstChild("HumanoidRootPart")
-                                    if hrpE then _G.TargetMob = nextTarget; _G.KillH = true; h.CFrame = hrpE.CFrame * CFrame.new(0, 25, 0); task.wait(TD) end
+                                    if hrpE then 
+                                        _G.TargetMob = nextTarget; _G.KillH = true; h.CFrame = hrpE.CFrame * CFrame.new(0, 25, 0); task.wait(TD) 
+                                    end
                                 end
                                 task.wait(0.1)
                             end 
                         end 
                     else updateUI("Tween To Portal", "Clear") end
 
+                -- [[ BLOX FRUIT SECTION ]]
                 elseif currentHandToolTip == "Blox Fruit" then
+                    _G.MeyyHealthData = _G.MeyyHealthData or {}
+                    local healthTracker = _G.MeyyHealthData
+
                     local i = {}
                     for _, e in pairs(f:GetChildren()) do 
                         if e.Name ~= IE then 
-                            local hrpE = e:FindFirstChild("HumanoidRootPart"); local humE = e:FindFirstChild("Humanoid")
-                            if hrpE and humE and humE.Health > 0 then table.insert(i, e) end 
+                            local hrpE = e:FindFirstChild("HumanoidRootPart")
+                            local humE = e:FindFirstChild("Humanoid")
+                            if hrpE and humE and humE.Health > 0 then 
+                                local curH = humE.Health
+                                local oldH = healthTracker[e] or curH
+                                
+                                if curH >= oldH then
+                                    table.insert(i, e)
+                                end
+                                healthTracker[e] = curH
+                            end 
                         end 
                     end
+
                     if #i > 0 then 
-                        updateUI("Clear Room " .. rNum, "Clearing Mobs")
+                        updateUI("Clear Room " .. rNum, "Smart TP - No Damage")
                         for _, e in ipairs(i) do 
                             if not isAlive() then break end
-                            _G.TargetMob = e; _G.KillH = true 
+                            local humE = e:FindFirstChild("Humanoid")
                             local hrpE = e:FindFirstChild("HumanoidRootPart")
-                            if hrpE then h.CFrame = hrpE.CFrame; task.wait(TD) end 
+                            
+                            if humE and hrpE then
+                                local checkH = humE.Health
+                                if checkH >= (healthTracker[e] or checkH) then
+                                    _G.TargetMob = e; _G.KillH = true 
+                                    h.CFrame = hrpE.CFrame; task.wait(TD)
+                                end
+                                healthTracker[e] = checkH
+                            end
                         end
+
                         local x = fE()
                         if x and isAlive() then 
                             _G.KillH = false; _G.TargetMob = nil
                             local pP = x.Position + Vector3.new(0, 55, 0)
                             task.spawn(function() cP(pP) end)
-                            
-                            h.CFrame = CFrame.new(pP + Vector3.new(0, 0, 5)); task.wait(0.1)
+                            h.CFrame = CFrame.new(pP + Vector3.new(0, 0, 5))
+                            task.wait(0.1)
+
                             while isAlive() do 
                                 local checkB, _ = iB(); if checkB then break end
                                 local mList = {}; local enemiesAlive = 0
+                                
                                 for _, e in pairs(f:GetChildren()) do 
                                     if e.Name ~= IE then 
-                                        local hrpE = e:FindFirstChild("HumanoidRootPart"); local humE = e:FindFirstChild("Humanoid")
-                                        if hrpE and humE and humE.Health > 0 then enemiesAlive += 1; if (hrpE.Position - h.Position).Magnitude > GR then table.insert(mList, e) end end 
+                                        local hrpE = e:FindFirstChild("HumanoidRootPart")
+                                        local humE = e:FindFirstChild("Humanoid")
+                                        if hrpE and humE and humE.Health > 0 then 
+                                            enemiesAlive += 1
+                                            local curH = humE.Health
+                                            local oldH = healthTracker[e] or curH
+                                            
+                                            if curH >= oldH and (hrpE.Position - h.Position).Magnitude > GR then 
+                                                table.insert(mList, e) 
+                                            end 
+                                            healthTracker[e] = curH
+                                        end 
                                     end 
                                 end
+
                                 if enemiesAlive == 0 then updateUI("Tween To Portal", "Clear") break end
                                 if #mList == 0 then break end
+
                                 for _, e in ipairs(mList) do 
                                     if not isAlive() then break end
-                                    _G.TargetMob = e; _G.KillH = true 
+                                    local humE = e:FindFirstChild("Humanoid")
                                     local hrpE = e:FindFirstChild("HumanoidRootPart")
-                                    if hrpE then h.CFrame = hrpE.CFrame; task.wait(TD) end 
+                                    
+                                    if humE and hrpE then
+                                        local checkH = humE.Health
+                                        if checkH >= (healthTracker[e] or checkH) then
+                                            _G.TargetMob = e; _G.KillH = true 
+                                            h.CFrame = hrpE.CFrame; task.wait(TD)
+                                        end
+                                        healthTracker[e] = checkH
+                                    end
                                 end
-                                if isAlive() then _G.TargetMob = nil; _G.KillH = false; h.CFrame = CFrame.new(pP + Vector3.new(0, 0, 5)); task.wait(TD); task.wait(0.1) end
+                                if isAlive() then 
+                                    _G.TargetMob = nil; _G.KillH = false
+                                    h.CFrame = CFrame.new(pP + Vector3.new(0, 0, 5))
+                                    task.wait(TD); task.wait(0.1) 
+                                end
                             end 
                         end 
                     else updateUI("Tween To Portal", "Clear") end
 
+                -- [[ GUN SECTION ]]
                 elseif currentHandToolTip == "Gun" then
                     _G.dragontorm = true
                     local i = {}
                     for _, e in pairs(f:GetChildren()) do 
                         if e.Name ~= IE then 
-                            local hrpE = e:FindFirstChild("HumanoidRootPart"); local humE = e:FindFirstChild("Humanoid")
+                            local hrpE = e:FindFirstChild("HumanoidRootPart")
+                            local humE = e:FindFirstChild("Humanoid")
                             if hrpE and humE and humE.Health > 0 then table.insert(i, e) end 
                         end 
                     end
@@ -820,34 +899,46 @@ task.spawn(function()
                                 _G.TargetMob = e; _G.KillH = true 
                                 local targetCF = hrpE.CFrame * CFrame.new(0, 25, 0)
                                 local tween = TS:Create(h, TweenInfo.new(0.3, Enum.EasingStyle.Linear), {CFrame = targetCF})
-                                tween:Play(); tween.Completed:Wait()
+                                tween:Play()
+                                tween.Completed:Wait()
                                 repeat 
                                     if not isAlive() then break end
-                                    _G.TargetMob = e; h.CFrame = hrpE.CFrame * CFrame.new(0, 25, 0); task.wait(0.1)
+                                    _G.TargetMob = e
+                                    h.CFrame = hrpE.CFrame * CFrame.new(0, 25, 0)
+                                    task.wait(0.1)
                                 until not e.Parent or not (humE and humE.Health > 0)
                                 _G.TargetMob = nil; _G.KillH = false
                             end
                         end
+                        
                         local x = fE()
                         if x and isAlive() then 
                             _G.KillH = false; _G.TargetMob = nil
                             local pP = x.Position + Vector3.new(0, 25, 0)
                             task.spawn(function() cP(pP) end)
                             
-                            h.CFrame = CFrame.new(pP + Vector3.new(0, 0, 5)); task.wait(0.1)
+                            h.CFrame = CFrame.new(pP + Vector3.new(0, 0, 5))
+                            task.wait(0.1)
                             while isAlive() do 
                                 local checkB, _ = iB(); if checkB then break end
-                                local enemiesAlive = 0; local nextTarget = nil
+                                local enemiesAlive = 0
+                                local nextTarget = nil
                                 for _, e in pairs(f:GetChildren()) do 
                                     if e.Name ~= IE then 
-                                        local hrpE = e:FindFirstChild("HumanoidRootPart"); local humE = e:FindFirstChild("Humanoid")
-                                        if hrpE and humE and humE.Health > 0 then enemiesAlive += 1; if not nextTarget then nextTarget = e end end 
+                                        local hrpE = e:FindFirstChild("HumanoidRootPart")
+                                        local humE = e:FindFirstChild("Humanoid")
+                                        if hrpE and humE and humE.Health > 0 then 
+                                            enemiesAlive += 1
+                                            if not nextTarget then nextTarget = e end 
+                                        end 
                                     end 
                                 end
                                 if enemiesAlive == 0 then updateUI("Tween To Portal", "Clear") break end
                                 if nextTarget then
                                     local hrpE = nextTarget:FindFirstChild("HumanoidRootPart")
-                                    if hrpE then _G.TargetMob = nextTarget; _G.KillH = true; h.CFrame = hrpE.CFrame * CFrame.new(0, 25, 0); task.wait(TD) end
+                                    if hrpE then 
+                                        _G.TargetMob = nextTarget; _G.KillH = true; h.CFrame = hrpE.CFrame * CFrame.new(0, 25, 0); task.wait(TD) 
+                                    end
                                 end
                                 task.wait(0.1)
                             end 
@@ -858,6 +949,6 @@ task.spawn(function()
                 end 
             end 
             task.wait(0.2)
-        end 
-    end 
+        end
+    end
 end)
