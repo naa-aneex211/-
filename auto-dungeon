@@ -58,7 +58,6 @@ local function equipToolByRole()
                     if not (currentlyEquipped and currentlyEquipped.ToolTip == myToolTip) then
                         for _, item in pairs(backpack:GetChildren()) do
                             if item:IsA("Tool") and item.ToolTip == myToolTip then
-                                -- [meyy~ thêm task.spawn để trang bị ngay hông làm khựng game nhó]
                                 task.spawn(function() hum:EquipTool(item) end)
                                 break
                             end
@@ -68,7 +67,6 @@ local function equipToolByRole()
             else
                 local currentlyEquipped = character:FindFirstChildOfClass("Tool")
                 if currentlyEquipped then
-                    -- [meyy~ thêm task.spawn vô cất đồ cho lẹ nè]
                     task.spawn(function() hum:UnequipTools() end)
                 end
             end
@@ -382,7 +380,6 @@ task.spawn(function()
                 
                 if targetPos then
                     AimBotSkillPosition = targetPos 
-                    -- [meyy~ thêm task.spawn để gửi sự kiện bắn súng hông chờ, mượt nhó]
                     task.spawn(function()
                         ShootGunEvent:FireServer(targetPos, {mobHead or mobHRP}) 
                     end)
@@ -400,9 +397,7 @@ task.spawn(function()
         if _G.dragontorm then
             local centerX = Camera.ViewportSize.X / 2
             local centerY = Camera.ViewportSize.Y / 2
-            
-            -- [meyy~ tách riêng input để nó có thể wait độc lập mừ hông chặn luồng nè]
-            task.spawn(function()
+                        task.spawn(function()
                 Vim:SendMouseButtonEvent(centerX, centerY, 0, true, game, 1) 
                 task.wait(0.05)
                 Vim:SendMouseButtonEvent(centerX, centerY, 0, false, game, 1) 
@@ -463,6 +458,7 @@ task.spawn(function()
     local global_roomEntryTime = 0 
 
     local function updateUI(farmMsg, mobMsg)
+        -- [meyy~ quăng update UI vô task.spawn để hông làm nghẽn game logic đó nha!]
         task.spawn(function()
             local farmFullText = "Status Farm: " .. tostring(farmMsg)
             local mobFullText = "Farm Mob: " .. tostring(mobMsg)
@@ -484,7 +480,6 @@ task.spawn(function()
         local currentRoom = getCurrentRoomNumber()
         local myRole = getCurrentToolTip()
         
-        -- Logic mới mượt mò: bỏ qua 0 để chết hông bị mất phase 2 nhó
         if currentRoom > 0 and currentRoom ~= global_lastRoomCheck then
             global_lastRoomCheck = currentRoom
             global_isPhaseTwo = false
@@ -497,7 +492,6 @@ task.spawn(function()
         end
     
         if currentRoom >= 31 then
-            -- [meyy~ dùng task.spawn để ngắt farm ngay và luôn]
             task.spawn(function()
                 _G.KillH = false
                 _G.TargetMob = nil
@@ -514,7 +508,6 @@ task.spawn(function()
             executeFlyToNearestExit(); task.wait(0.1); continue 
         end
 
-        -- Vô room mới ngoan ngoãn đợi 1s rùi mới chạy hàm TargetMob nhó
         if tick() - global_roomEntryTime < 1 then
             _G.TargetMob = nil
             task.wait(0.1)
@@ -524,7 +517,8 @@ task.spawn(function()
         -------------------------------------------------------------------------
         -- BOSS LOGIC (SYNCED ROOM 15 & 20) -------------------------------------
         -------------------------------------------------------------------------
-                    UpdateUI("Clear Boss Room " .. rNum, "Boss Battle")
+        if isBoss then 
+            updateUI("Clear Boss Room " .. rNum, "Boss Battle")
             local f = workspace:FindFirstChild(EF)
             if f then 
                 local bossFightTimer = tick()
@@ -540,32 +534,24 @@ task.spawn(function()
                     local priorityTarget = nil
                     local activeBoss = nil
                     local deadBoss = nil
-                    local isGasKnightAlive = false
 
                     for _, e in pairs(f:GetChildren()) do
-                        if e.Name == "Gas Knight" and Attack.Alive(e) then
-                            isGasKnightAlive = true
-                        end
-
                         if e.Name == PROP_NAME and Attack.Alive(e) then
-                            priorityTarget = e
+                            if rNum == 20 then
+                                priorityTarget = e
+                            end
                         elseif e.Name ~= IE and e.Name ~= PROP_NAME then
                             if Attack.Alive(e) then activeBoss = e else deadBoss = e end
                         end
                     end
 
                     local targetBoss = activeBoss or deadBoss
-                    
-                    if isGasKnightAlive then
-                        _G.TargetMob = priorityTarget or targetBoss
-                    else
-                        _G.TargetMob = targetBoss
-                    end
+                    _G.TargetMob = priorityTarget or targetBoss 
 
                     -------------------------------------------------------------------------
                     -- RESET LOGIC (20S & ANYONE DIED) --------------------------------------
                     -------------------------------------------------------------------------
-  local someoneDied = false
+                    local someoneDied = false
                     for _, pl in ipairs(P:GetPlayers()) do
                         local plChar = pl.Character
                         if plChar then
@@ -582,14 +568,12 @@ task.spawn(function()
                         local waitTime = 0
 
                         if rNum == 15 then
-                            -- Man 15: Doi du 20s trong Phase 2
                             if global_isPhaseTwo and (tick() - bossFightTimer > 20) then
                                 shouldReset = true
                             elseif not global_isPhaseTwo then
                                 bossFightTimer = tick()
                             end
                         elseif rNum == 20 then
-                            -- Man 20: Phai la Phase 2 moi cho 1.25s
                             if global_isPhaseTwo then
                                 shouldReset = true
                                 waitTime = 1.25
@@ -597,7 +581,6 @@ task.spawn(function()
                                 bossFightTimer = tick()
                             end
                         elseif rNum == 5 or rNum == 10 then
-                            -- Man 5 va 10: Cho luon 1.25s hông can dieu kien
                             shouldReset = true
                             waitTime = 1.25
                         end
@@ -623,11 +606,11 @@ task.spawn(function()
                     -------------------------------------------------------------------------
                     -- MOVEMENT & PHASES (SYNCED ROOM 15 & 20) ------------------------------
                     -------------------------------------------------------------------------
-Local isBossRoom, maxRoom = iB()
+                    local isBossRoom, maxRoom = iB()
                     local currentRoom = getCurrentRoomNumber()
                     local canFightProp = false
                     
-                    if rNum == 15 and isBossRoom and (currentRoom == maxRoom) and priorityTarget then
+                    if rNum == 20 and isBossRoom and (currentRoom == maxRoom) and priorityTarget then
                         if activeBoss and Attack.Alive(activeBoss) then
                             canFightProp = true
                         end
@@ -666,7 +649,6 @@ Local isBossRoom, maxRoom = iB()
                             local combatOffset = (myRole == "Blox Fruit") and 3 or 25 
 
                             
-                            -- Movement Target Calculation
                             if activeBoss then
                                 if (rNum == 15 or rNum == 20) then
                                     if global_isPhaseTwo and hpPercent <= 93 then
@@ -686,7 +668,6 @@ Local isBossRoom, maxRoom = iB()
                                 updateUI("Boss Dead", "Waiting Despawn")
                             end
 
-                            -- Sky Hop and Tween Logic
                             local currentDist = (mHRP.Position - bHRP.Position).Magnitude
                             local targetDist = (mHRP.Position - targetPos).Magnitude
 
@@ -707,20 +688,20 @@ Local isBossRoom, maxRoom = iB()
             task.wait(0.1)
 
         ----------------------------------------------------------------
-else 
+        else 
             _G.KillH = false; _G.TargetMob = nil
             local f = workspace:FindFirstChild(EF); local h = gH()
             
-if f and h then 
-    local toolInHand = p.Character and p.Character:FindFirstChildOfClass("Tool")
-    local currentHandToolTip = toolInHand and toolInHand.ToolTip or "None"
+            if f and h then 
+                local toolInHand = p.Character and p.Character:FindFirstChildOfClass("Tool")
+                local currentHandToolTip = toolInHand and toolInHand.ToolTip or "None"
 
-    if _G.LastToolPrinted ~= currentHandToolTip then
-        print("ʚ₊˚meყყ˚₊ɞ - Hiện tại đang cầm: " .. currentHandToolTip)
-        _G.LastToolPrinted = currentHandToolTip
-    end
+                if _G.LastToolPrinted ~= currentHandToolTip then
+                    print("ʚ₊˚meყყ˚₊ɞ - Hiện tại đang cầm: " .. currentHandToolTip)
+                    _G.LastToolPrinted = currentHandToolTip
+                end
 
-    if currentHandToolTip == "Melee" or currentHandToolTip == "Sword" then
+                if currentHandToolTip == "Melee" or currentHandToolTip == "Sword" then
                     local i = {}
                     for _, e in pairs(f:GetChildren()) do 
                         if e.Name ~= IE then 
@@ -793,7 +774,6 @@ if f and h then
                         if x and isAlive() then 
                             _G.KillH = false; _G.TargetMob = nil
                             local pP = x.Position + Vector3.new(0, 55, 0)
-                            -- [meyy~ tạo sàn đệm ở nhánh spawn lun nè]
                             task.spawn(function() cP(pP) end)
                             
                             h.CFrame = CFrame.new(pP + Vector3.new(0, 0, 5)); task.wait(0.1)
@@ -851,7 +831,6 @@ if f and h then
                         if x and isAlive() then 
                             _G.KillH = false; _G.TargetMob = nil
                             local pP = x.Position + Vector3.new(0, 25, 0)
-                            -- [meyy~ tạo sàn đệm ở nhánh riêng nà]
                             task.spawn(function() cP(pP) end)
                             
                             h.CFrame = CFrame.new(pP + Vector3.new(0, 0, 5)); task.wait(0.1)
@@ -875,8 +854,8 @@ if f and h then
                     else 
                         updateUI("Tween To Portal", "Clear") 
                     end
-                end -- Close the role check
-            end -- Close the if f and h check
+                end 
+            end 
             task.wait(0.2)
         end 
     end 
