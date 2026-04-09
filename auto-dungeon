@@ -11,7 +11,7 @@ local p = P.LocalPlayer
 
 workspace.Gravity = 0
 local EF = "Enemies"
-local IE = "Blank Buddy"
+local IE = { "Blank Buddy", "PropHitboxPlaceholder" }
 local PROP_NAME = "PropHitboxPlaceholder" 
 local TD = 0.075
 local GR = 35
@@ -720,7 +720,7 @@ task.spawn(function()
                 if currentHandToolTip == "Melee" or currentHandToolTip == "Sword" then
                     local i = {}
                     for _, e in pairs(f:GetChildren()) do 
-                        if e.Name ~= IE then 
+                        if not table.find(IE, e.Name) then
                             local hrpE = e:FindFirstChild("HumanoidRootPart")
                             local humE = e:FindFirstChild("Humanoid")
                             if hrpE and humE and humE.Health > 0 then table.insert(i, e) end 
@@ -762,7 +762,7 @@ task.spawn(function()
                                 local enemiesAlive = 0
                                 local nextTarget = nil
                                 for _, e in pairs(f:GetChildren()) do 
-                                    if e.Name ~= IE then 
+                                    if not table.find(IE, e.Name) then 
                                         local hrpE = e:FindFirstChild("HumanoidRootPart")
                                         local humE = e:FindFirstChild("Humanoid")
                                         if hrpE and humE and humE.Health > 0 then 
@@ -790,7 +790,7 @@ task.spawn(function()
 
                     local i = {}
                     for _, e in pairs(f:GetChildren()) do 
-                        if e.Name ~= IE then 
+                       if not table.find(IE, e.Name) then
                             local hrpE = e:FindFirstChild("HumanoidRootPart")
                             local humE = e:FindFirstChild("Humanoid")
                             if hrpE and humE and humE.Health > 0 then 
@@ -835,7 +835,7 @@ task.spawn(function()
                                 local mList = {}; local enemiesAlive = 0
                                 
                                 for _, e in pairs(f:GetChildren()) do 
-                                    if e.Name ~= IE then 
+                                    if not table.find(IE, e.Name) then
                                         local hrpE = e:FindFirstChild("HumanoidRootPart")
                                         local humE = e:FindFirstChild("Humanoid")
                                         if hrpE and humE and humE.Health > 0 then 
