@@ -174,7 +174,6 @@ local function GatherAtLeader()
     local myPlayer = game:GetService("Players").LocalPlayer
     local name = myPlayer.Name:lower()
 
-    -- Kiểm tra kỹ xem tên ann có trong danh sách được phép hông nhó
     local isAllowed = false
     for userName, _ in pairs(allowedUsers) do
         if name == userName then
@@ -200,14 +199,12 @@ local function GatherAtLeader()
             local myHRP = myPlayer.Character.HumanoidRootPart
             local distToSpot = (myHRP.Position - CorrectedWaitingSpot).Magnitude
 
-            -- Nếu đi 1 mình thì check ngay lập tức để vọt lẹ qua Raid lun
             if totalRequired == 1 then
                 _G.SetFarmStatus("Status: Solo Mode - Ready!")
                 task.wait(0)
                 break
             end
 
-            -- Nếu đi team thì mới bắt đầu bay ra điểm chờ nhó
             if distToSpot > 10 then
                 local offset = CFrame.new(math.random(-2, 2), 0, math.random(-2, 2))
                 myHRP.CFrame = CFrame.new(CorrectedWaitingSpot) * offset
@@ -227,7 +224,6 @@ local function GatherAtLeader()
             end
         end
 
-        -- Logic đếm số ngừi để tự kích hoạt
         local readyCount = 0
         for _, p in pairs(game:GetService("Players"):GetPlayers()) do
             local pName = p.Name:lower()
@@ -286,6 +282,7 @@ local function isDungeonSafe(center)
     return true, teamInPad
 end
 
+-- [UPDATE: LOGIC CHỌN PAD DỰA VÀO MODEBOSS]
 local function JoinDungeonTeleport()
     while task.wait(0) do
         if _G.AccjoinRaid then
@@ -293,32 +290,99 @@ local function JoinDungeonTeleport()
                 local currentD = nil
                 for _, d in pairs(Dungeons) do if d.name == _G.FoundDungeon then currentD = d break end end
                 if currentD then
-                    local isSafe, _ = isDungeonSafe(currentD.center)
-                    if not isSafe then
-                        _G.SetFarmStatus("Status: Stranger detected! Changing...")
-                        _G.FoundDungeon = nil
-                        _G.StartDuggeon = false
-                        task.wait(0.5)
+                    if CFG["ModeBoss"] == "M1" then
+                        -- [M1 Mode]: Kiem tra xem pad hien tai co bi qua full khong (>=4 la bi cho la day)
+                        local count = 0
+                        for _, p in pairs(ply:GetPlayers()) do
+                            if p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
+                                local pPos = p.Character.HumanoidRootPart.Position
+                                local dist = (Vector2.new(pPos.X, pPos.Z) - Vector2.new(currentD.center.X, currentD.center.Z)).Magnitude
+                                if dist <= DungeonRadius then count = count + 1 end
+                            end
+                        end
+                        if count >= 4 then
+                            _G.SetFarmStatus("Status: Pad Full (>3)! Changing...")
+                            _G.FoundDungeon = nil
+                            _G.StartDuggeon = false
+                            task.wait(0.5)
+                        end
+                    else
+                        -- [Kill Aura Mode]: Logic cu toi uu - Ne toan bo nguoi la
+                        local isSafe, _ = isDungeonSafe(currentD.center)
+                        if not isSafe then
+                            _G.SetFarmStatus("Status: Stranger detected! Changing...")
+                            _G.FoundDungeon = nil
+                            _G.StartDuggeon = false
+                            task.wait(0.5)
+                        end
                     end
                 end
             end
+            
             if not _G.FoundDungeon then
-                local foundAnyFree = false
-                for _, dungeon in pairs(Dungeons) do
-                    local isSafe, count = isDungeonSafe(dungeon.center)
-                    if isSafe and count == 0 then
-                        foundAnyFree = true
-                        _G.SetFarmStatus("Status: Entering " .. dungeon.name)
-                        _G.FoundDungeon = dungeon.name
-                        tp(CFrame.new(dungeon.center + HeightOffset))
+                if CFG["ModeBoss"] == "M1" then
+                    -- [M1 Mode]: Tim pad dong nguoi nhat nhung tong the van duoi 4 player
+                    local bestPad = nil
+                    local maxPlayers = 0
+                    local emptyPad = nil
+                    
+                    for _, dungeon in pairs(Dungeons) do
+                        local count = 0
+                        for _, p in pairs(ply:GetPlayers()) do
+                            if p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
+                                local pPos = p.Character.HumanoidRootPart.Position
+                                local dist = (Vector2.new(pPos.X, pPos.Z) - Vector2.new(dungeon.center.X, dungeon.center.Z)).Magnitude
+                                if dist <= DungeonRadius then count = count + 1 end
+                            end
+                        end
+                        
+                        -- Dieu kien tren 1 va duoi 4: 1, 2, hoac 3 nguoi.
+                        if count > 0 and count < 4 then
+                            if count > maxPlayers then
+                                maxPlayers = count
+                                bestPad = dungeon
+                            end
+                        elseif count == 0 and not emptyPad then
+                            emptyPad = dungeon
+                        end
+                    end
+                    
+                    if bestPad then
+                        _G.SetFarmStatus("Status: Entering Crowded " .. bestPad.name)
+                        _G.FoundDungeon = bestPad.name
+                        tp(CFrame.new(bestPad.center + HeightOffset))
                         task.wait(1)
                         _G.StartDuggeon = true
-                        break
+                    elseif emptyPad then
+                        -- Fallback vao pad trong neu khong ai farm o tat ca cac pad
+                        _G.SetFarmStatus("Status: Entering Empty " .. emptyPad.name)
+                        _G.FoundDungeon = emptyPad.name
+                        tp(CFrame.new(emptyPad.center + HeightOffset))
+                        task.wait(1)
+                        _G.StartDuggeon = true
+                    else
+                        _G.SetFarmStatus("Status: Pads full! Waiting area...")
+                        tp(CFrame.new(WaitingSpot + HeightOffset))
                     end
-                end
-                if not foundAnyFree then
-                    _G.SetFarmStatus("Status: Pads full! Waiting area...")
-                    tp(CFrame.new(WaitingSpot + HeightOffset))
+                else
+                    -- [Kill Aura Mode]: Tim pad trong hoan toan
+                    local foundAnyFree = false
+                    for _, dungeon in pairs(Dungeons) do
+                        local isSafe, count = isDungeonSafe(dungeon.center)
+                        if isSafe and count == 0 then
+                            foundAnyFree = true
+                            _G.SetFarmStatus("Status: Entering " .. dungeon.name)
+                            _G.FoundDungeon = dungeon.name
+                            tp(CFrame.new(dungeon.center + HeightOffset))
+                            task.wait(1)
+                            _G.StartDuggeon = true
+                            break
+                        end
+                    end
+                    if not foundAnyFree then
+                        _G.SetFarmStatus("Status: Pads full! Waiting area...")
+                        tp(CFrame.new(WaitingSpot + HeightOffset))
+                    end
                 end
             end
         end
@@ -406,7 +470,7 @@ end
 
 Init()
 
--- [PHẦN 9: VÒNG LẶP KIỂM TRA PAD VÀ SETTING]
+-- [PHẦN 9: VÒNG LẶP KIỂM TRA PAD VÀ SETTING CHIA THEO MODEBOSS]
 task.spawn(function()
     local PadsDungeons = {
         {name = "Dungeon 1", center = Vector3.new(-231.965485, 232.758224, -433.251038)},
@@ -422,13 +486,32 @@ task.spawn(function()
                 if (pPos - Vector2.new(dungeon.center.X, dungeon.center.Z)).Magnitude <= 10 then currentPad = dungeon break end
             end
             if currentPad then
-                local isSafe, _ = isDungeonSafe(currentPad.center)
-                if isSafe then
-                    local padName = currentPad.name:gsub("Dungeon ", "DUNGEON_TELEPORTER")
-                    local padsFolder = workspace:FindFirstChild("Map") and workspace.Map:FindFirstChild("Simulation Hub") and workspace.Map["Simulation Hub"]:FindFirstChild("Pads")
-                    local pad = padsFolder and padsFolder:FindFirstChild(padName)
-                    if pad then pcall(function() pad.DungeonSettingsChanged:FireServer("Start") end) end
+                local padName = currentPad.name:gsub("Dungeon ", "DUNGEON_TELEPORTER")
+                local padsFolder = workspace:FindFirstChild("Map") and workspace.Map:FindFirstChild("Simulation Hub") and workspace.Map["Simulation Hub"]:FindFirstChild("Pads")
+                local pad = padsFolder and padsFolder:FindFirstChild(padName)
+                
+                if CFG["ModeBoss"] == "M1" then
+                    -- [M1 Mode]: Tu tin bat pad neu tong the duoi 4 player
+                    local count = 0
+                    for _, p in pairs(ply:GetPlayers()) do
+                        if p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
+                            local cPos = p.Character.HumanoidRootPart.Position
+                            if (Vector2.new(cPos.X, cPos.Z) - Vector2.new(currentPad.center.X, currentPad.center.Z)).Magnitude <= DungeonRadius then
+                                count = count + 1
+                            end
+                        end
+                    end
+                    if count < 4 then
+                        if pad then pcall(function() pad.DungeonSettingsChanged:FireServer("Start") end) end
+                    end
+                else
+                    -- [Kill Aura Mode]: Bat pad neu toan team (khong co ai la)
+                    local isSafe, _ = isDungeonSafe(currentPad.center)
+                    if isSafe then
+                        if pad then pcall(function() pad.DungeonSettingsChanged:FireServer("Start") end) end
+                    end
                 end
+                
                 task.wait(5) 
             end
         end
