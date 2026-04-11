@@ -282,7 +282,6 @@ local function isDungeonSafe(center)
     return true, teamInPad
 end
 
--- [UPDATE: LOGIC CHỌN PAD DỰA VÀO MODEBOSS]
 local function JoinDungeonTeleport()
     while task.wait(0) do
         if _G.AccjoinRaid then
@@ -290,8 +289,7 @@ local function JoinDungeonTeleport()
                 local currentD = nil
                 for _, d in pairs(Dungeons) do if d.name == _G.FoundDungeon then currentD = d break end end
                 if currentD then
-                    if CFG["ModeBoss"] == "M1" then
-                        -- [M1 Mode]: Kiem tra xem pad hien tai co bi qua full khong (>=4 la bi cho la day)
+                    if CFG["ModeJoin"] == "single" then
                         local count = 0
                         for _, p in pairs(ply:GetPlayers()) do
                             if p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
@@ -320,8 +318,7 @@ local function JoinDungeonTeleport()
             end
             
             if not _G.FoundDungeon then
-                if CFG["ModeBoss"] == "M1" then
-                    -- [M1 Mode]: Tim pad dong nguoi nhat nhung tong the van duoi 4 player
+                if CFG["ModeJoin"] == "single" then
                     local bestPad = nil
                     local maxPlayers = 0
                     local emptyPad = nil
@@ -336,7 +333,6 @@ local function JoinDungeonTeleport()
                             end
                         end
                         
-                        -- Dieu kien tren 1 va duoi 4: 1, 2, hoac 3 nguoi.
                         if count > 0 and count < 4 then
                             if count > maxPlayers then
                                 maxPlayers = count
@@ -354,7 +350,6 @@ local function JoinDungeonTeleport()
                         task.wait(1)
                         _G.StartDuggeon = true
                     elseif emptyPad then
-                        -- Fallback vao pad trong neu khong ai farm o tat ca cac pad
                         _G.SetFarmStatus("Status: Entering Empty " .. emptyPad.name)
                         _G.FoundDungeon = emptyPad.name
                         tp(CFrame.new(emptyPad.center + HeightOffset))
@@ -365,7 +360,7 @@ local function JoinDungeonTeleport()
                         tp(CFrame.new(WaitingSpot + HeightOffset))
                     end
                 else
-                    -- [Kill Aura Mode]: Tim pad trong hoan toan
+                   
                     local foundAnyFree = false
                     for _, dungeon in pairs(Dungeons) do
                         local isSafe, count = isDungeonSafe(dungeon.center)
@@ -490,7 +485,7 @@ task.spawn(function()
                 local padsFolder = workspace:FindFirstChild("Map") and workspace.Map:FindFirstChild("Simulation Hub") and workspace.Map["Simulation Hub"]:FindFirstChild("Pads")
                 local pad = padsFolder and padsFolder:FindFirstChild(padName)
                 
-                if CFG["ModeBoss"] == "M1" then
+                if CFG["ModeJoin"] == "single" then
                     -- [M1 Mode]: Tu tin bat pad neu tong the duoi 4 player
                     local count = 0
                     for _, p in pairs(ply:GetPlayers()) do
