@@ -23,7 +23,52 @@ local PR = 35
 local mT = 0
 local FLY_SPEED = 350
 
+local function startAutoEquip()
+    local player = game.Players.LocalPlayer
+    
+    spawn(function()
+        -- Lưu lại giá trị cũ để kiểm tra khi ann tắt nhó
+        local lastWeapon = _G.SelectWeapon
+        
+        while task.wait() do
+            local character = player.Character
+            local backpack = player.Backpack
+            local currentSelection = _G.SelectWeapon
+            
+            if currentSelection ~= "" and currentSelection ~= nil then
+                if character and character:FindFirstChild("Humanoid") then
+                    local toolInHand = character:FindFirstChildOfClass("Tool")
+                    
+                    if not toolInHand or toolInHand.ToolTip ~= currentSelection then
+                        
+                        task.wait(4)
+                        
+                        if _G.SelectWeapon == currentSelection then
+                            for _, tool in pairs(backpack:GetChildren()) do
+                                if tool:IsA("Tool") and tool.ToolTip == currentSelection then
+                                    character.Humanoid:EquipTool(tool)
+                                    break
+                                end
+                            end
+                        end
+                    end
+                end
+                lastWeapon = currentSelection
+            else
+                -- [[ OFF LOGIC ]] --
+                -- Khi ann để trống thì nó tự cất tool đang cầm ik 1 lần nhó (っ˘ω˘ς)
+                if character then
+                    local tool = character:FindFirstChildOfClass("Tool")
+                    if tool and tool.ToolTip == lastWeapon then
+                        tool.Parent = player.Backpack
+                    end
+                end
+            end
+        end
+    end)
+end
 
+startAutoEquip()
 
 local hasUnequippedForTransform = false 
 
