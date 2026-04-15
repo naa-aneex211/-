@@ -252,7 +252,7 @@ local Config = {
     AttackPlayers = true,
     AttackCooldown = 0,
     ComboResetTime = 0,
-    MaxCombo = 2,
+    MaxCombo = 1,
     HitboxLimbs = {"RightLowerArm", "RightUpperArm", "LeftLowerArm", "LeftUpperArm", "RightHand", "LeftHand"},
     AutoClickEnabled = true
 }
@@ -371,7 +371,9 @@ end
 
 function FastAttack:ShootInTarget(TargetPosition)
     local Character = Player.Character
-    if not self:IsEntityAlive(Character) then return end
+    -------------------------
+    if not Character then return end
+    -------------------------
     
     local Equipped = Character:FindFirstChildOfClass("Tool")
     if not Equipped or Equipped.ToolTip ~= "Gun" then return end
@@ -474,7 +476,9 @@ end
 function FastAttack:Attack()
     if not Config.AutoClickEnabled or (tick() - self.Debounce) < Config.AttackCooldown then return end
     local Character = Player.Character
-    if not Character or not self:IsEntityAlive(Character) then return end
+    -------------------------
+    if not Character then return end
+    -------------------------
     
     local Humanoid = Character:FindFirstChild("Humanoid")
     if not Humanoid then return end
