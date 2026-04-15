@@ -147,7 +147,9 @@ local function Attack()
     local character = LocalPlayer.Character
     if not character then return end
     
-    local tool = character:FindFirstChildOfClass("Tool")
+    -- ---------
+    local tool = character:FindFirstChildOfClass("Tool") or LocalPlayer.Backpack:FindFirstChildOfClass("Tool")
+    -- ---------
     if not tool or tool:GetAttribute("WeaponType") ~= "Melee" then return end
 
     local enemy = GetClosestEnemy()
@@ -216,7 +218,9 @@ local function AttackAll()
     local character = player.Character
     if not character then return end
 
-    local equippedWeapon = character:FindFirstChild("EquippedWeapon")
+    -- ---------
+    local equippedWeapon = character:FindFirstChild("EquippedWeapon") or player.Backpack:FindFirstChildOfClass("Tool")
+    -- ---------
     if not equippedWeapon then return end
 
     local regAttack = Remotes["RE/RegisterAttack"] or RegisterAttack
@@ -252,7 +256,7 @@ local Config = {
     AttackPlayers = true,
     AttackCooldown = 0,
     ComboResetTime = 0,
-    MaxCombo = 1,
+    MaxCombo = 2,
     HitboxLimbs = {"RightLowerArm", "RightUpperArm", "LeftLowerArm", "LeftUpperArm", "RightHand", "LeftHand"},
     AutoClickEnabled = true
 }
@@ -371,11 +375,11 @@ end
 
 function FastAttack:ShootInTarget(TargetPosition)
     local Character = Player.Character
-    -------------------------
+    -- ---------
     if not Character then return end
-    -------------------------
     
-    local Equipped = Character:FindFirstChildOfClass("Tool")
+    local Equipped = Character:FindFirstChildOfClass("Tool") or Player.Backpack:FindFirstChildOfClass("Tool")
+    -- ---------
     if not Equipped or Equipped.ToolTip ~= "Gun" then return end
     
     local Cooldown = Equipped:FindFirstChild("Cooldown") and Equipped.Cooldown.Value or 0.3
@@ -476,14 +480,16 @@ end
 function FastAttack:Attack()
     if not Config.AutoClickEnabled or (tick() - self.Debounce) < Config.AttackCooldown then return end
     local Character = Player.Character
-    -------------------------
+    -- ---------
     if not Character then return end
-    -------------------------
+    -- ---------
     
     local Humanoid = Character:FindFirstChild("Humanoid")
     if not Humanoid then return end
     
-    local Equipped = Character:FindFirstChildOfClass("Tool")
+    -- ---------
+    local Equipped = Character:FindFirstChildOfClass("Tool") or Player.Backpack:FindFirstChildOfClass("Tool")
+    -- ---------
     if not Equipped then return end
     
     local ToolTip = Equipped.ToolTip
