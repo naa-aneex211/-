@@ -1,4 +1,4 @@
-loadstring(game:HttpGet("https://meyyhub.xyz/slotSystem.lua"))()
+
 if not LPH_OBFUSCATED then
     LPH_ENCSTR = LPH_ENCSTR or function(...) return ... end
     LPH_NO_VIRTUALIZE = LPH_NO_VIRTUALIZE or function(...) return ... end
